@@ -13,7 +13,7 @@ interface ProductGridProps {
 
 export default function ProductGrid({ products, title = "Latest Products" }: ProductGridProps) {
   const { formatPrice, currency, loading } = useCurrency();
-  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const getPriceDisplay = (product: Product) => {
     if (product.type === "variable" && product.variations && product.variations.length > 0) {
@@ -30,9 +30,9 @@ export default function ProductGrid({ products, title = "Latest Products" }: Pro
   };
 
   const handleBuyNow = (product: Product) => {
-    setProcessingId(product.id);
-    // Redirect to cart immediately as requested by user
-    window.location.href = "/cart";
+    // Redirect to product page for both variable and simple products
+    // to ensure user sees all details/options
+    window.location.href = `/product/${product.id}`;
   };
 
   if (loading) {
@@ -65,7 +65,7 @@ export default function ProductGrid({ products, title = "Latest Products" }: Pro
               </div>
               <div className="p-6 flex-grow flex flex-col">
                 <div className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">
-                  {product.category.replace("-", " ")}
+                  {product.category?.replace("-", " ")}
                 </div>
                 <h3 className="text-lg font-bold mb-2 text-gray-900 line-clamp-2 group-hover:text-primary transition-colors">
                   {product.name}
@@ -81,15 +81,15 @@ export default function ProductGrid({ products, title = "Latest Products" }: Pro
                   {getPriceDisplay(product)}
                 </p>
                 <div className="mt-auto grid grid-cols-2 gap-3">
-                    <button className="bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-lg transition-all uppercase text-[10px] tracking-widest border border-gray-200">
+                    <Link href={`/product/${product.id}`} className="bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-lg transition-all uppercase text-[10px] tracking-widest border border-gray-200 text-center flex items-center justify-center">
                       Options
-                    </button>
+                    </Link>
                     <button 
                       onClick={() => handleBuyNow(product)}
                       disabled={processingId === product.id}
                       className="bg-primary hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-all uppercase text-[10px] tracking-widest disabled:opacity-50 shadow-lg shadow-primary/20"
                     >
-                      {processingId === product.id ? "..." : "Buy Now"}
+                      {processingId === product.id ? "..." : "View Details"}
                     </button>
                 </div>
               </div>

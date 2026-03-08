@@ -1,33 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useShop } from "@/context/ShopContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Trash2, ShoppingBag, ArrowRight, Minus, Plus } from "lucide-react";
 import Link from "next/link";
-import { products } from "@/data/products";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([
-    { ...products[0], quantity: 1 },
-    { ...products[1], quantity: 1 },
-  ]);
+  const { cart, updateCartQuantity, removeFromCart, cartTotal } = useShop();
 
-  const updateQuantity = (id: number, delta: number) => {
-    setCartItems(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  };
-
-  const removeItem = (id: number) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = cartTotal;
   const shipping = subtotal > 500 ? 0 : 50;
   const total = subtotal + shipping;
 
@@ -40,36 +22,38 @@ export default function CartPage() {
           Your Shopping Cart
         </h1>
 
-        {cartItems.length > 0 ? (
+        {cart.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             {/* Cart Items List */}
             <div className="lg:col-span-8 space-y-4">
-              {cartItems.map((item) => (
-                <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-6 group">
+              {cart.map((item) => (
+                <div key={item.cartId || item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-6 group">
                   <div className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <div className="flex-1 space-y-1">
                     <h3 className="font-black italic text-gray-900 uppercase tracking-wider">{item.name}</h3>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{item.category}</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+                      {item.selectedVariation ? item.selectedVariation.name : item.category}
+                    </p>
                     <div className="flex items-center space-x-4 mt-4">
                       <div className="flex items-center border border-gray-100 rounded-lg bg-gray-50 overflow-hidden">
                         <button 
-                          onClick={() => updateQuantity(item.id, -1)}
+                          onClick={() => updateCartQuantity(item.cartId, -1)}
                           className="p-2 hover:bg-gray-100 text-gray-400 hover:text-primary transition-colors"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="px-4 text-sm font-black italic">{item.quantity}</span>
                         <button 
-                          onClick={() => updateQuantity(item.id, 1)}
+                          onClick={() => updateCartQuantity(item.cartId, 1)}
                           className="p-2 hover:bg-gray-100 text-gray-400 hover:text-primary transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <button 
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeFromCart(item.cartId)}
                         className="text-red-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -104,13 +88,13 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <button className="w-full bg-primary text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/30 hover:bg-orange-600 transition-all flex items-center justify-center group mt-8">
+                <Link href="/checkout" className="w-full bg-primary text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/30 hover:bg-orange-600 transition-all flex items-center justify-center group mt-8">
                   Proceed to Checkout
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
                 
                 <div className="text-center pt-4">
-                  <Link href="/shop" className="text-xs text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-widest">
+                  <Link href="/" className="text-xs text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-widest">
                     Continue Shopping
                   </Link>
                 </div>
@@ -127,7 +111,7 @@ export default function CartPage() {
               Looks like you haven't added any high-performance parts to your cart yet. Let's get your build started!
             </p>
             <Link 
-              href="/shop" 
+              href="/" 
               className="inline-flex items-center bg-primary text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all group"
             >
               Start Shopping

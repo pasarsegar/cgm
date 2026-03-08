@@ -1,37 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Plus, 
   Search, 
   Edit2, 
   Trash2, 
-  MoreVertical,
-  ExternalLink
+  Loader2,
+  Image as ImageIcon
 } from "lucide-react";
-import { products as initialProducts } from "@/data/products";
+import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
 import ProductForm from "./ProductForm";
 import CategoryForm from "./CategoryForm";
-import { categories as initialCategories } from "@/data/products";
 
 export default function AdminProducts() {
-  const [products, setProducts] = useState(initialProducts);
-  const [categories, setCategories] = useState(initialCategories);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    
+    // Fetch products
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('*, categories(name)')
+      .order('created_at', { ascending: false });
+    
+    // Fetch categories
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+
+    if (productsData) setProducts(productsData);
+    if (categoriesData) setCategories(categoriesData);
+    
+    setLoading(false);
+  };
+
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchQuery.toLowerCase())
+    p.categories?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter(p => p.id !== id));
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Error deleting product: ' + error.message);
+      } else {
+        fetchData();
+      }
     }
   };
 
@@ -83,63 +117,72 @@ export default function AdminProducts() {
       </div>
 
       {/* Products Table */}
-      <div className="overflow-x-auto border border-gray-100 rounded-xl">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Product</th>
-              <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</th>
-              <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Price (USD)</th>
-              <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {filteredProducts.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
-                      {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 text-gray-300" />
-                      )}
+      {loading ? (
+          <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>
+      ) : (
+        <div className="overflow-x-auto border border-gray-100 rounded-xl bg-white shadow-sm">
+            <table className="w-full text-left border-collapse">
+            <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Product</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Price (USD)</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+                {filteredProducts.map((product) => (
+                <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
+                        {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <ImageIcon className="w-5 h-5 text-gray-300" />
+                        )}
+                        </div>
+                        <div>
+                        <div className="font-bold text-gray-900 text-sm">{product.name}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ID: {product.id.substring(0, 8)}...</div>
+                        </div>
                     </div>
-                    <div>
-                      <div className="font-bold text-gray-900 text-sm">{product.name}</div>
-                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ID: #{product.id}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800">
+                        {product.categories?.name || 'Uncategorized'}
+                    </span>
+                    </td>
+                    <td className="px-6 py-4 font-black text-gray-900 text-sm">
+                    {formatCurrency(product.price, "USD")}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end space-x-2">
+                        <button 
+                        onClick={() => handleEdit(product)}
+                        className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                        >
+                        <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                        <Trash2 className="w-4 h-4" />
+                        </button>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800">
-                    {product.category.replace("-", " ")}
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-black text-gray-900 text-sm">
-                  {formatCurrency(product.price, "USD")}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end space-x-2">
-                    <button 
-                      onClick={() => handleEdit(product)}
-                      className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    </td>
+                </tr>
+                ))}
+                {filteredProducts.length === 0 && (
+                    <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">No products found.</td>
+                    </tr>
+                )}
+            </tbody>
+            </table>
+        </div>
+      )}
 
       {/* Product Form Modal */}
       {isFormOpen && (
@@ -147,12 +190,8 @@ export default function AdminProducts() {
           product={editingProduct} 
           categories={categories}
           onClose={() => setIsFormOpen(false)}
-          onSave={(updatedProduct: any) => {
-            if (editingProduct) {
-              setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-            } else {
-              setProducts([...products, { ...updatedProduct, id: Date.now() }]);
-            }
+          onSave={() => {
+            fetchData();
             setIsFormOpen(false);
           }}
         />
@@ -163,8 +202,8 @@ export default function AdminProducts() {
         <CategoryForm 
           category={editingCategory}
           onClose={() => setIsCategoryFormOpen(false)}
-          onSave={(newCategory: any) => {
-            setCategories([...categories, newCategory]);
+          onSave={() => {
+            fetchData();
             setIsCategoryFormOpen(false);
           }}
         />
@@ -172,5 +211,3 @@ export default function AdminProducts() {
     </div>
   );
 }
-
-import { Image as ImageIcon } from "lucide-react";

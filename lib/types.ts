@@ -1,5 +1,5 @@
 export interface Variation {
-  id: number;
+  id: string;
   name: string; // e.g. "S55", "N55", "B58"
   price: number;
 }
@@ -14,20 +14,28 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
-  subCategories: SubCategory[];
+  parent_id?: string;
+  subCategories?: SubCategory[];
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number; // Base price or min price for variable products
   image: string;
   gallery?: string[]; // Array of image URLs
   rating: number;
   category: string; // Category slug
+  category_id?: string;
+  sub_category_id?: string;
   subCategory?: string; // Sub-category slug
   type: "simple" | "variable";
   variations?: Variation[];
+  description?: string;
+  categories?: {
+    name: string;
+    slug: string;
+  };
 }
 
 export interface Widget {

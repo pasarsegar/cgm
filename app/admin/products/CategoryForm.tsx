@@ -5,18 +5,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { X, Plus, Trash2 } from "lucide-react";
 import { Category, SubCategory } from "@/lib/types";
-
-const subCategorySchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, "Name required"),
-  slug: z.string().min(1, "Slug required"),
-});
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 
 const categorySchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, "Name required"),
   slug: z.string().min(1, "Slug required"),
-  subCategories: z.array(subCategorySchema),
+  parent_id: z.string().optional().nullable(),
 });
 
 type CategoryFormData = z.infer<typeof categorySchema>;
@@ -24,31 +20,59 @@ type CategoryFormData = z.infer<typeof categorySchema>;
 interface CategoryFormProps {
   category?: Category | null;
   onClose: () => void;
-  onSave: (category: any) => void;
+  onSave: () => void;
 }
 
 export default function CategoryForm({ category, onClose, onSave }: CategoryFormProps) {
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('categories').select('*').order('name');
+      setAllCategories(data || []);
+    };
+    fetchCategories();
+  }, []);
+
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors, isSubmitting },
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
-    defaultValues: category || {
-      name: "",
-      slug: "",
-      subCategories: [],
+    defaultValues: {
+      name: category?.name || "",
+      slug: category?.slug || "",
+      parent_id: category?.parent_id || null,
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "subCategories",
-  });
+  const onSubmit = async (data: CategoryFormData) => {
+    const payload = {
+      name: data.name,
+      slug: data.slug,
+      parent_id: data.parent_id || null,
+    };
 
-  const onSubmit = (data: CategoryFormData) => {
-    onSave({ ...data, id: category?.id || Date.now().toString() });
+    let error;
+    if (category?.id) {
+      const { error: updateError } = await supabase
+        .from('categories')
+        .update(payload)
+        .eq('id', category.id);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from('categories')
+        .insert([{ ...payload, id: crypto.randomUUID() }]);
+      error = insertError;
+    }
+
+    if (error) {
+      alert('Error saving category: ' + error.message);
+    } else {
+      onSave();
+    }
   };
 
   return (
@@ -64,7 +88,7 @@ export default function CategoryForm({ category, onClose, onSave }: CategoryForm
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Category Name</label>
               <input 
@@ -83,45 +107,19 @@ export default function CategoryForm({ category, onClose, onSave }: CategoryForm
               />
               {errors.slug && <p className="text-red-500 text-xs mt-1">{errors.slug.message}</p>}
             </div>
-          </div>
-
-          <div className="border-t border-gray-100 pt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Sub Categories</h3>
-              <button
-                type="button"
-                onClick={() => append({ name: "", slug: "" })}
-                className="text-sm bg-secondary/10 text-secondary hover:bg-secondary/20 px-3 py-1.5 rounded-lg flex items-center space-x-1 transition-all"
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Parent Category (Optional)</label>
+              <select 
+                {...register("parent_id")}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Sub Category</span>
-              </button>
-            </div>
-
-            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-start space-x-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div className="flex-1 grid grid-cols-2 gap-4">
-                    <input
-                      {...register(`subCategories.${index}.name` as const)}
-                      className="w-full px-3 py-1.5 border border-gray-200 rounded focus:outline-none focus:border-primary text-sm"
-                      placeholder="Name"
-                    />
-                    <input
-                      {...register(`subCategories.${index}.slug` as const)}
-                      className="w-full px-3 py-1.5 border border-gray-200 rounded focus:outline-none focus:border-primary text-sm"
-                      placeholder="Slug"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="mt-1 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                <option value="">None (Top Level)</option>
+                {allCategories
+                  .filter(c => !c.parent_id && c.id !== category?.id)
+                  .map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+              </select>
             </div>
           </div>
 

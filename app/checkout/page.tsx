@@ -7,27 +7,77 @@ import Footer from "@/components/layout/Footer";
 import { ArrowRight, Lock, Shield, Check } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export default function CheckoutPage() {
   const { cart, cartTotal, paymentSettings, clearCart } = useShop();
   const [step, setStep] = useState<"details" | "payment" | "success">("details");
   const [loading, setLoading] = useState(false);
   const [selectedGateway, setSelectedGateway] = useState<"xendit" | "midtrans" | "cod" | null>(null);
+  const [orderId, setOrderId] = useState("");
+
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    address: "",
+    city: "",
+    postalCode: ""
+  });
 
   const shipping = cartTotal > 500 ? 0 : 50;
   const total = cartTotal + shipping;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handlePlaceOrder = async () => {
     if (!selectedGateway) return;
     
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setStep("success");
-      clearCart();
-    }, 2000);
+    try {
+        const newOrderId = `ORD-${Date.now()}`; // Simple ID generation
+        
+        // 1. Create Order
+        const { error: orderError } = await supabase.from('orders').insert({
+            id: newOrderId,
+            customer_name: `${formData.firstName} ${formData.lastName}`,
+            customer_email: formData.email,
+            shipping_address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
+            status: 'pending',
+            total: total,
+            currency: 'USD', 
+        });
+
+        if (orderError) throw orderError;
+
+        // 2. Create Order Items
+        const orderItems = cart.map(item => ({
+            id: crypto.randomUUID(),
+            order_id: newOrderId,
+            product_id: item.id,
+            product_name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            variation: item.selectedVariation?.name || null
+        }));
+
+        const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+
+        if (itemsError) throw itemsError;
+
+        setOrderId(newOrderId);
+        setStep("success");
+        clearCart();
+    } catch (error: any) {
+        console.error("Order error:", error);
+        alert("Failed to place order: " + error.message);
+    } finally {
+        setLoading(false);
+    }
   };
 
   if (cart.length === 0 && step !== "success") {
@@ -37,7 +87,7 @@ export default function CheckoutPage() {
         <div className="flex-grow flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-2xl shadow-sm text-center max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
-            <Link href="/shop" className="text-primary font-bold hover:underline">Return to Shop</Link>
+            <Link href="/" className="text-primary font-bold hover:underline">Return to Shop</Link>
           </div>
         </div>
         <Footer />
@@ -57,7 +107,7 @@ export default function CheckoutPage() {
             </div>
             <h1 className="text-3xl font-black italic uppercase text-gray-900 mb-4">Order Confirmed!</h1>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Thank you for your order. We have sent a confirmation email to your inbox. Your Order ID is <span className="font-bold text-gray-900">#ORD-{Math.floor(Math.random() * 10000)}</span>.
+              Thank you for your order. We have sent a confirmation email to your inbox. Your Order ID is <span className="font-bold text-gray-900">#{orderId}</span>.
             </p>
             <Link 
               href="/"
@@ -89,32 +139,74 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-500 uppercase">First Name</label>
-                      <input type="text" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <input 
+                        type="text" 
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                      />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-500 uppercase">Last Name</label>
-                      <input type="text" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <input 
+                        type="text" 
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                      />
                     </div>
                     <div className="space-y-1 md:col-span-2">
                       <label className="text-xs font-bold text-gray-500 uppercase">Email Address</label>
-                      <input type="email" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <input 
+                        type="email" 
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                      />
                     </div>
                     <div className="space-y-1 md:col-span-2">
                       <label className="text-xs font-bold text-gray-500 uppercase">Street Address</label>
-                      <input type="text" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <input 
+                        type="text" 
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                      />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-500 uppercase">City</label>
-                      <input type="text" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <input 
+                        type="text" 
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                      />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-500 uppercase">Postal Code</label>
-                      <input type="text" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <input 
+                        type="text" 
+                        name="postalCode"
+                        value={formData.postalCode}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                      />
                     </div>
                   </div>
                   <div className="mt-8 flex justify-end">
                     <button 
-                      onClick={() => setStep("payment")}
+                      onClick={() => {
+                        if (formData.firstName && formData.email && formData.address) {
+                            setStep("payment");
+                        } else {
+                            alert("Please fill in all required fields");
+                        }
+                      }}
                       className="bg-primary text-white px-8 py-3 rounded-xl font-bold uppercase tracking-wider shadow-lg shadow-primary/20 hover:bg-orange-600 transition-colors flex items-center"
                     >
                       Continue to Payment
@@ -198,7 +290,7 @@ export default function CheckoutPage() {
 
                   {!paymentSettings.xenditEnabled && !paymentSettings.midtransEnabled && (
                     <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 text-xs rounded-lg border border-yellow-100">
-                      No payment gateways are enabled in Admin Settings. Only COD is available or please contact support.
+                      No payment gateways are enabled in Admin Settings. Only COD is available.
                     </div>
                   )}
 
@@ -228,10 +320,15 @@ export default function CheckoutPage() {
                 <h3 className="font-black italic uppercase tracking-wider text-gray-900 mb-4">Order Summary</h3>
                 <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar mb-4">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-start space-x-4">
+                    <div key={item.cartId || item.id} className="flex items-start space-x-4">
                       <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg bg-gray-50" />
                       <div className="flex-1">
                         <h4 className="text-sm font-bold text-gray-900 line-clamp-2">{item.name}</h4>
+                        {item.selectedVariation && (
+                            <span className="text-[10px] font-bold text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded">
+                                {item.selectedVariation.name}
+                            </span>
+                        )}
                         <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity} × ${item.price.toLocaleString()}</p>
                       </div>
                       <span className="font-bold text-sm">${(item.price * item.quantity).toLocaleString()}</span>

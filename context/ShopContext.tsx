@@ -1,11 +1,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Product } from "@/lib/types";
-import { products } from "@/data/products";
+import { Product, Variation } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 
 export interface Slide {
-  id: number;
+  id: string;
   title: string;
   subtitle: string;
   description: string;
@@ -31,6 +31,8 @@ export interface PaymentSettings {
 
 interface CartItem extends Product {
   quantity: number;
+  selectedVariation?: Variation;
+  cartId: string; // unique id combining product id and variation id
 }
 
 interface ShopContextType {
@@ -38,8 +40,8 @@ interface ShopContextType {
   slides: Slide[];
   setSlides: (slides: Slide[]) => void;
   addSlide: (slide: Slide) => void;
-  removeSlide: (id: number) => void;
-  updateSlide: (id: number, slide: Slide) => void;
+  removeSlide: (id: string) => void;
+  updateSlide: (id: string, slide: Slide) => void;
 
   // Header
   headerSettings: HeaderSettings;
@@ -51,35 +53,18 @@ interface ShopContextType {
 
   // Cart
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (id: number) => void;
-  updateCartQuantity: (id: number, delta: number) => void;
+  addToCart: (product: Product, quantity?: number, variation?: Variation) => void;
+  removeFromCart: (cartId: string) => void;
+  updateCartQuantity: (cartId: string, delta: number) => void;
   clearCart: () => void;
   cartTotal: number;
+  cartCount: number;
+  
+  loading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
-
-const initialSlides: Slide[] = [
-  {
-    id: 1,
-    title: "B58 ENGINE STAGE 2 TUNE",
-    subtitle: "PERFORMANCE UNLEASHED",
-    description: "Experience massive power gains and improved drivability for your BMW B58 engine.",
-    image: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=2070&auto=format&fit=crop",
-    buttonText: "Shop Now",
-    buttonLink: "/shop"
-  },
-  {
-    id: 2,
-    title: "CUSTOM TUNING SERVICES",
-    subtitle: "TAILORED EXCELLENCE",
-    description: "Our expert team provides precision tuning for high-performance cars.",
-    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=2070&auto=format&fit=crop",
-    buttonText: "Book Now",
-    buttonLink: "/tuning"
-  }
-];
 
 const initialHeaderSettings: HeaderSettings = {
   height: "80px",
@@ -97,41 +82,72 @@ const initialPaymentSettings: PaymentSettings = {
 };
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
-  // State
-  const [slides, setSlidesState] = useState<Slide[]>(initialSlides);
+  const [slides, setSlidesState] = useState<Slide[]>([]);
   const [headerSettings, setHeaderSettingsState] = useState<HeaderSettings>(initialHeaderSettings);
   const [paymentSettings, setPaymentSettingsState] = useState<PaymentSettings>(initialPaymentSettings);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load from LocalStorage
-  useEffect(() => {
-    const savedSlides = localStorage.getItem("shop_slides");
-    if (savedSlides) setSlidesState(JSON.parse(savedSlides));
+  const fetchData = async () => {
+    setLoading(true);
+    
+    // Fetch Slider
+    const { data: sliderData } = await supabase
+      .from('sliders')
+      .select('*')
+      .eq('active', true)
+      .maybeSingle();
+    
+    if (sliderData) {
+      setSlidesState(sliderData.slides || []);
+    }
 
-    const savedHeader = localStorage.getItem("shop_header");
-    if (savedHeader) setHeaderSettingsState(JSON.parse(savedHeader));
+    // Fetch Settings
+    const { data: settingsData } = await supabase.from('settings').select('*');
+    if (settingsData) {
+      const header = settingsData.find(s => s.key === 'header_settings')?.value;
+      if (header) setHeaderSettingsState(JSON.parse(header));
 
-    const savedPayment = localStorage.getItem("shop_payment");
-    if (savedPayment) setPaymentSettingsState(JSON.parse(savedPayment));
+      const payment = settingsData.find(s => s.key === 'payment_settings')?.value;
+      if (payment) setPaymentSettingsState(JSON.parse(payment));
+    }
 
+    // Cart stays in localStorage as it's client-side only usually
     const savedCart = localStorage.getItem("shop_cart");
     if (savedCart) setCart(JSON.parse(savedCart));
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  // Save to LocalStorage helpers
-  const setSlides = (newSlides: Slide[]) => {
+  const setSlides = async (newSlides: Slide[]) => {
     setSlidesState(newSlides);
-    localStorage.setItem("shop_slides", JSON.stringify(newSlides));
+    // In a real CMS, we'd update the 'sliders' table
+    await supabase.from('sliders').upsert({
+        id: 'main-slider',
+        name: 'Main Slider',
+        slides: newSlides,
+        active: true
+    });
   };
 
-  const setHeaderSettings = (settings: HeaderSettings) => {
+  const setHeaderSettings = async (settings: HeaderSettings) => {
     setHeaderSettingsState(settings);
-    localStorage.setItem("shop_header", JSON.stringify(settings));
+    await supabase.from('settings').upsert({
+        key: 'header_settings',
+        value: JSON.stringify(settings)
+    });
   };
 
-  const setPaymentSettings = (settings: PaymentSettings) => {
+  const setPaymentSettings = async (settings: PaymentSettings) => {
     setPaymentSettingsState(settings);
-    localStorage.setItem("shop_payment", JSON.stringify(settings));
+    await supabase.from('settings').upsert({
+        key: 'payment_settings',
+        value: JSON.stringify(settings)
+    });
   };
 
   const saveCart = (newCart: CartItem[]) => {
@@ -139,26 +155,29 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("shop_cart", JSON.stringify(newCart));
   };
 
-  // Slider Actions
   const addSlide = (slide: Slide) => setSlides([...slides, slide]);
-  const removeSlide = (id: number) => setSlides(slides.filter(s => s.id !== id));
-  const updateSlide = (id: number, slide: Slide) => setSlides(slides.map(s => s.id === id ? slide : s));
+  const removeSlide = (id: string) => setSlides(slides.filter(s => s.id !== id));
+  const updateSlide = (id: string, slide: Slide) => setSlides(slides.map(s => s.id === id ? slide : s));
 
-  // Cart Actions
-  const addToCart = (product: Product, quantity = 1) => {
-    const existing = cart.find(c => c.id === product.id);
+  const addToCart = (product: Product, quantity = 1, variation?: Variation) => {
+    const cartId = variation ? `${product.id}-${variation.id}` : product.id;
+    const existing = cart.find(c => c.cartId === cartId);
+    
+    // Calculate price based on variation if selected
+    const price = variation ? variation.price : product.price;
+
     if (existing) {
-      saveCart(cart.map(c => c.id === product.id ? { ...c, quantity: c.quantity + quantity } : c));
+      saveCart(cart.map(c => c.cartId === cartId ? { ...c, quantity: c.quantity + quantity } : c));
     } else {
-      saveCart([...cart, { ...product, quantity }]);
+      saveCart([...cart, { ...product, quantity, selectedVariation: variation, cartId, price }]);
     }
   };
 
-  const removeFromCart = (id: number) => saveCart(cart.filter(c => c.id !== id));
+  const removeFromCart = (cartId: string) => saveCart(cart.filter(c => c.cartId !== cartId));
   
-  const updateCartQuantity = (id: number, delta: number) => {
+  const updateCartQuantity = (cartId: string, delta: number) => {
     saveCart(cart.map(c => {
-      if (c.id === id) {
+      if (c.cartId === cartId) {
         return { ...c, quantity: Math.max(1, c.quantity + delta) };
       }
       return c;
@@ -168,13 +187,15 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   const clearCart = () => saveCart([]);
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <ShopContext.Provider value={{
       slides, setSlides, addSlide, removeSlide, updateSlide,
       headerSettings, setHeaderSettings,
       paymentSettings, setPaymentSettings,
-      cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal
+      cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, cartCount,
+      loading, refreshData: fetchData
     }}>
       {children}
     </ShopContext.Provider>

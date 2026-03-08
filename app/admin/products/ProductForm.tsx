@@ -6,21 +6,22 @@ import * as z from "zod";
 import { X, Plus, Trash2, Image as ImageIcon, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Product, Variation, Category } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 
 const variationSchema = z.object({
-  id: z.number().optional(),
+  id: z.string().optional(),
   name: z.string().min(1, "Variation name required"),
   price: z.number().min(0, "Price must be positive"),
 });
 
 const productSchema = z.object({
-  id: z.number().optional(),
+  id: z.string().optional(),
   name: z.string().min(3, "Name must be at least 3 characters"),
   price: z.number().min(0, "Price must be positive"),
   image: z.string().min(1, "Main image URL required"),
   gallery: z.array(z.string()).default([]),
-  category: z.string().min(1, "Please select a category"),
-  subCategory: z.string().optional(),
+  category_id: z.string().min(1, "Please select a category"),
+  sub_category_id: z.string().optional(),
   type: z.enum(["simple", "variable"]),
   rating: z.number().min(0).max(5).default(0),
   variations: z.array(variationSchema).optional(),
@@ -32,12 +33,13 @@ interface ProductFormProps {
   product?: Product | null;
   categories: Category[];
   onClose: () => void;
-  onSave: (product: any) => void;
+  onSave: () => void;
 }
 
 export default function ProductForm({ product, categories, onClose, onSave }: ProductFormProps) {
   const [galleryInput, setGalleryInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   
   const {
     register,
@@ -48,21 +50,44 @@ export default function ProductForm({ product, categories, onClose, onSave }: Pr
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: product || {
-      name: "",
-      price: 0,
-      image: "/placeholder-product.jpg",
-      gallery: [],
-      category: categories[0].slug,
-      subCategory: "",
-      type: "simple",
-      rating: 0,
-      variations: [],
+    defaultValues: {
+      name: product?.name || "",
+      price: product?.price || 0,
+      image: product?.image || "/placeholder-product.jpg",
+      gallery: product?.gallery || [],
+      category_id: product?.category_id || categories[0]?.id || "",
+      sub_category_id: product?.sub_category_id || "",
+      type: product?.type || "simple",
+      rating: product?.rating || 0,
+      variations: product?.variations || [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variations",
   });
 
   const gallery = watch("gallery") || [];
   const mainImage = watch("image");
+  const productType = watch("type");
+  const selectedCategoryId = watch("category_id");
+
+  useEffect(() => {
+    if (selectedCategoryId) {
+      // Find sub-categories for the selected category
+      const fetchSubCategories = async () => {
+        const { data } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('parent_id', selectedCategoryId);
+        setSubCategories(data || []);
+      };
+      fetchSubCategories();
+    } else {
+      setSubCategories([]);
+    }
+  }, [selectedCategoryId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'main' | 'gallery') => {
     const files = e.target.files;
@@ -111,23 +136,68 @@ export default function ProductForm({ product, categories, onClose, onSave }: Pr
     setValue("gallery", gallery.filter(item => item !== url));
   };
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "variations",
-  });
-
-  const selectedCategorySlug = watch("category");
-  const productType = watch("type");
-  const selectedCategory = categories.find(c => c.slug === selectedCategorySlug);
-
-  const onSubmit = (data: ProductFormData) => {
-    // For variable products, the base price is the minimum variation price
-    let finalData = { ...data };
+  const onSubmit = async (data: ProductFormData) => {
+    let finalPrice = data.price;
     if (data.type === "variable" && data.variations && data.variations.length > 0) {
-      const minPrice = Math.min(...data.variations.map(v => v.price));
-      finalData.price = minPrice;
+      finalPrice = Math.min(...data.variations.map(v => v.price));
     }
-    onSave({ ...finalData, id: product?.id || Date.now() });
+
+    const productPayload = {
+      name: data.name,
+      price: finalPrice,
+      image: data.image,
+      gallery: data.gallery,
+      category_id: data.category_id,
+      sub_category_id: data.sub_category_id,
+      type: data.type,
+      rating: data.rating,
+    };
+
+    let productId = product?.id;
+    let error;
+
+    if (productId) {
+      // Update existing
+      const { error: updateError } = await supabase
+        .from('products')
+        .update(productPayload)
+        .eq('id', productId);
+      error = updateError;
+    } else {
+      // Insert new
+      productId = crypto.randomUUID();
+      const { error: insertError } = await supabase
+        .from('products')
+        .insert([{ ...productPayload, id: productId }]);
+      error = insertError;
+    }
+
+    if (error) {
+      alert('Error saving product: ' + error.message);
+      return;
+    }
+
+    // Handle Variations
+    if (data.type === "variable" && data.variations) {
+      // Simple way: Delete all existing variations and insert new ones
+      if (product?.id) {
+        await supabase.from('product_variations').delete().eq('product_id', product.id);
+      }
+      
+      const variationsPayload = data.variations.map(v => ({
+        id: crypto.randomUUID(),
+        product_id: productId,
+        name: v.name,
+        price: v.price
+      }));
+
+      if (variationsPayload.length > 0) {
+        const { error: vError } = await supabase.from('product_variations').insert(variationsPayload);
+        if (vError) alert('Error saving variations: ' + vError.message);
+      }
+    }
+
+    onSave();
   };
 
   return (
@@ -161,11 +231,12 @@ export default function ProductForm({ product, categories, onClose, onSave }: Pr
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
               <select 
-                {...register("category")}
+                {...register("category_id")}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
               >
-                {categories.map(cat => (
-                  <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+                <option value="">Select Category</option>
+                {categories.filter(c => !c.parent_id).map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
             </div>
@@ -173,12 +244,12 @@ export default function ProductForm({ product, categories, onClose, onSave }: Pr
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Sub Category</label>
               <select 
-                {...register("subCategory")}
+                {...register("sub_category_id")}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
               >
                 <option value="">None</option>
-                {selectedCategory?.subCategories.map(sub => (
-                  <option key={sub.slug} value={sub.slug}>{sub.name}</option>
+                {subCategories.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.name}</option>
                 ))}
               </select>
             </div>

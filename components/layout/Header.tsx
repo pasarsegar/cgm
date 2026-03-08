@@ -1,16 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Search, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/lib/admin-context";
 import { useShop } from "@/context/ShopContext";
+import { supabase } from "@/lib/supabase";
+
+interface MenuItem {
+  id: string;
+  label: string;
+  type: 'page' | 'custom' | 'category';
+  url?: string;
+  children?: MenuItem[];
+}
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { siteName } = useAdmin();
-  const { headerSettings, cartTotal } = useShop();
+  const { headerSettings, cartCount } = useShop();
+  
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMenu();
+  }, []);
+
+  const fetchMenu = async () => {
+    const { data: menu } = await supabase
+      .from('menus')
+      .select('items')
+      .eq('location', 'header')
+      .single();
+
+    if (menu && menu.items) {
+      setMenuItems(menu.items);
+    } else {
+      // Fallback if no menu is defined
+      setMenuItems([
+        { id: '1', label: 'Shop', type: 'page', url: '/shop' },
+        { id: '2', label: 'Tuning', type: 'page', url: '/tuning' },
+        { id: '3', label: 'Services', type: 'page', url: '/services' },
+        { id: '4', label: 'About', type: 'page', url: '/about' },
+        { id: '5', label: 'Contact', type: 'page', url: '/contact' }
+      ]);
+    }
+    setLoading(false);
+  };
 
   return (
     <header 
@@ -36,18 +74,37 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 items-center h-full">
-            {["Shop", "Tuning", "Services", "About", "Contact"].map((item) => (
-              <Link 
-                key={item} 
-                href={`/${item.toLowerCase()}`} 
-                className="font-bold hover:text-primary uppercase tracking-wider transition-colors flex items-center h-full"
-                style={{ 
-                  color: headerSettings.textColor,
-                  fontSize: headerSettings.fontSize
-                }}
-              >
-                {item}
-              </Link>
+            {menuItems.map((item) => (
+              <div key={item.id} className="relative group h-full flex items-center">
+                <Link 
+                  href={item.url || '#'} 
+                  className="font-bold hover:text-primary uppercase tracking-wider transition-colors flex items-center h-full"
+                  style={{ 
+                    color: headerSettings.textColor,
+                    fontSize: headerSettings.fontSize
+                  }}
+                >
+                  {item.label}
+                  {item.children && item.children.length > 0 && (
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  )}
+                </Link>
+                
+                {/* Dropdown for sub-items */}
+                {item.children && item.children.length > 0 && (
+                  <div className="absolute top-full left-0 w-48 bg-white shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                    {item.children.map(child => (
+                      <Link 
+                        key={child.id}
+                        href={child.url || '#'}
+                        className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary border-b border-gray-50 last:border-0"
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
 
@@ -61,9 +118,11 @@ export default function Header() {
             </Link>
             <Link href="/cart" className="relative hover:text-primary transition-colors" style={{ color: headerSettings.textColor }}>
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] font-bold px-1.5 rounded-full h-4 flex items-center justify-center">
-                {cartTotal > 99 ? '99+' : cartTotal}
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] font-bold px-1.5 rounded-full h-4 flex items-center justify-center">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
             </Link>
             
             {/* Mobile menu button */}
@@ -80,15 +139,31 @@ export default function Header() {
       {/* Mobile Navigation */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 p-4 space-y-4 animate-in slide-in-from-top-5 duration-200">
-          {["Shop", "Tuning", "Services", "About", "Contact"].map((item) => (
-            <Link 
-              key={item} 
-              href={`/${item.toLowerCase()}`} 
-              className="block text-sm font-bold text-text-muted hover:text-primary uppercase tracking-wider"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item}
-            </Link>
+          {menuItems.map((item) => (
+            <div key={item.id}>
+              <Link 
+                href={item.url || '#'} 
+                className="block text-sm font-bold text-text-muted hover:text-primary uppercase tracking-wider"
+                onClick={() => !item.children?.length && setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+              {/* Mobile Submenu */}
+              {item.children && item.children.length > 0 && (
+                <div className="pl-4 mt-2 space-y-2 border-l border-gray-100">
+                  {item.children.map(child => (
+                    <Link
+                      key={child.id}
+                      href={child.url || '#'}
+                      className="block text-sm text-gray-500 hover:text-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

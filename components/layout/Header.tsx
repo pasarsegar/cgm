@@ -67,7 +67,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-full">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center">
-            <span className="text-2xl font-black italic text-[#1d2327]">
+            <span className="text-2xl font-black italic" style={{ color: headerSettings.textColor }}>
               {siteName.split(' ')[0]}<span className="text-primary">{siteName.split(' ').slice(1).join('') || 'AUTO'}</span>
             </span>
           </Link>

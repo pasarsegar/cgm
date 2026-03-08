@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAdmin, AdminLayoutStyle } from "@/lib/admin-context";
-import { useShop, HeaderSettings, PaymentSettings } from "@/context/ShopContext";
+import { useShop, HeaderSettings, PaymentSettings, ThemeSettings } from "@/context/ShopContext";
 import { 
   Settings, 
   Globe, 
@@ -19,13 +19,40 @@ import { cn } from "@/lib/utils";
 
 export default function AdminSettings() {
   const { layoutStyle, setLayoutStyle, siteName, setSiteName } = useAdmin();
-  const { headerSettings, setHeaderSettings, paymentSettings, setPaymentSettings } = useShop();
+  const { headerSettings, setHeaderSettings, paymentSettings, setPaymentSettings, themeSettings, setThemeSettings } = useShop();
+  
+  // Local state for form handling to prevent excessive DB writes
+  const [localHeader, setLocalHeader] = useState<HeaderSettings>(headerSettings);
+  const [localTheme, setLocalTheme] = useState<ThemeSettings>(themeSettings);
+  const [localPayment, setLocalPayment] = useState<PaymentSettings>(paymentSettings);
+  
   const [activeTab, setActiveTab] = useState("General");
   const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+
+  // Sync local state with context when context updates (e.g. initial load)
+  useEffect(() => { setLocalHeader(headerSettings); }, [headerSettings]);
+  useEffect(() => { setLocalTheme(themeSettings); }, [themeSettings]);
+  useEffect(() => { setLocalPayment(paymentSettings); }, [paymentSettings]);
 
   const handleSave = () => {
     setIsSaving(true);
-    setTimeout(() => setIsSaving(false), 800);
+    setSaveMessage("");
+    
+    // Save settings via ShopContext logic (which persists to Supabase)
+    Promise.all([
+        setHeaderSettings(localHeader),
+        setPaymentSettings(localPayment),
+        setThemeSettings(localTheme)
+    ]).then(() => {
+        setIsSaving(false);
+        setSaveMessage("Settings saved successfully.");
+        setTimeout(() => setSaveMessage(""), 3000);
+    }).catch(err => {
+        setIsSaving(false);
+        setSaveMessage("Error saving settings.");
+        console.error(err);
+    });
   };
 
   const layoutOptions: { id: AdminLayoutStyle; name: string; desc: string; preview: string }[] = [
@@ -150,7 +177,7 @@ export default function AdminSettings() {
 
         {activeTab === "Header & Footer" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start border-b pb-8">
               <div>
                 <h3 className="text-sm font-bold text-[#1d2327]">Header Styling</h3>
                 <p className="text-xs text-gray-500 mt-1">Customize the look and feel of your site header.</p>
@@ -161,8 +188,8 @@ export default function AdminSettings() {
                   <input 
                     type="text" 
                     className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none" 
-                    value={headerSettings.height}
-                    onChange={(e) => setHeaderSettings({ ...headerSettings, height: e.target.value })}
+                    value={localHeader.height}
+                    onChange={(e) => setLocalHeader({ ...localHeader, height: e.target.value })}
                   />
                   <p className="text-xs text-gray-500 mt-1">e.g. 80px, 5rem</p>
                 </div>
@@ -172,14 +199,14 @@ export default function AdminSettings() {
                     <input 
                       type="color" 
                       className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
-                      value={headerSettings.backgroundColor}
-                      onChange={(e) => setHeaderSettings({ ...headerSettings, backgroundColor: e.target.value })}
+                      value={localHeader.backgroundColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, backgroundColor: e.target.value })}
                     />
                     <input 
                       type="text" 
                       className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
-                      value={headerSettings.backgroundColor}
-                      onChange={(e) => setHeaderSettings({ ...headerSettings, backgroundColor: e.target.value })}
+                      value={localHeader.backgroundColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, backgroundColor: e.target.value })}
                     />
                   </div>
                 </div>
@@ -189,14 +216,14 @@ export default function AdminSettings() {
                     <input 
                       type="color" 
                       className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
-                      value={headerSettings.textColor}
-                      onChange={(e) => setHeaderSettings({ ...headerSettings, textColor: e.target.value })}
+                      value={localHeader.textColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, textColor: e.target.value })}
                     />
                     <input 
                       type="text" 
                       className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
-                      value={headerSettings.textColor}
-                      onChange={(e) => setHeaderSettings({ ...headerSettings, textColor: e.target.value })}
+                      value={localHeader.textColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, textColor: e.target.value })}
                     />
                   </div>
                 </div>
@@ -205,10 +232,54 @@ export default function AdminSettings() {
                   <input 
                     type="text" 
                     className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none" 
-                    value={headerSettings.fontSize}
-                    onChange={(e) => setHeaderSettings({ ...headerSettings, fontSize: e.target.value })}
+                    value={localHeader.fontSize}
+                    onChange={(e) => setLocalHeader({ ...localHeader, fontSize: e.target.value })}
                   />
                   <p className="text-xs text-gray-500 mt-1">e.g. 14px, 1rem</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Styling */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+              <div>
+                <h3 className="text-sm font-bold text-[#1d2327]">Footer Styling</h3>
+                <p className="text-xs text-gray-500 mt-1">Customize the footer section.</p>
+              </div>
+              <div className="md:col-span-2 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Background Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="color" 
+                      className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                      value={localTheme.footerBackgroundColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerBackgroundColor: e.target.value })}
+                    />
+                    <input 
+                      type="text" 
+                      className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
+                      value={localTheme.footerBackgroundColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerBackgroundColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Text Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="color" 
+                      className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                      value={localTheme.footerTextColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerTextColor: e.target.value })}
+                    />
+                    <input 
+                      type="text" 
+                      className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
+                      value={localTheme.footerTextColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerTextColor: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -228,20 +299,20 @@ export default function AdminSettings() {
                   <input 
                     type="checkbox" 
                     id="xendit-enable"
-                    checked={paymentSettings.xenditEnabled}
-                    onChange={(e) => setPaymentSettings({ ...paymentSettings, xenditEnabled: e.target.checked })}
+                    checked={localPayment.xenditEnabled}
+                    onChange={(e) => setLocalPayment({ ...localPayment, xenditEnabled: e.target.checked })}
                     className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                   />
                   <label htmlFor="xendit-enable" className="text-sm font-medium">Enable Xendit</label>
                 </div>
-                {paymentSettings.xenditEnabled && (
+                {localPayment.xenditEnabled && (
                   <div className="animate-in fade-in slide-in-from-top-2">
                     <label className="block text-sm font-medium mb-1">Secret API Key</label>
                     <input 
                       type="password" 
                       className="w-full border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none" 
-                      value={paymentSettings.xenditApiKey}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, xenditApiKey: e.target.value })}
+                      value={localPayment.xenditApiKey}
+                      onChange={(e) => setLocalPayment({ ...localPayment, xenditApiKey: e.target.value })}
                       placeholder="xnd_..."
                     />
                   </div>
@@ -260,21 +331,21 @@ export default function AdminSettings() {
                   <input 
                     type="checkbox" 
                     id="midtrans-enable"
-                    checked={paymentSettings.midtransEnabled}
-                    onChange={(e) => setPaymentSettings({ ...paymentSettings, midtransEnabled: e.target.checked })}
+                    checked={localPayment.midtransEnabled}
+                    onChange={(e) => setLocalPayment({ ...localPayment, midtransEnabled: e.target.checked })}
                     className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                   />
                   <label htmlFor="midtrans-enable" className="text-sm font-medium">Enable Midtrans</label>
                 </div>
-                {paymentSettings.midtransEnabled && (
+                {localPayment.midtransEnabled && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                     <div>
                       <label className="block text-sm font-medium mb-1">Server Key</label>
                       <input 
                         type="password" 
                         className="w-full border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none" 
-                        value={paymentSettings.midtransServerKey}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, midtransServerKey: e.target.value })}
+                        value={localPayment.midtransServerKey}
+                        onChange={(e) => setLocalPayment({ ...localPayment, midtransServerKey: e.target.value })}
                         placeholder="SB-Mid-server-..."
                       />
                     </div>
@@ -283,8 +354,8 @@ export default function AdminSettings() {
                       <input 
                         type="text" 
                         className="w-full border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none" 
-                        value={paymentSettings.midtransClientKey}
-                        onChange={(e) => setPaymentSettings({ ...paymentSettings, midtransClientKey: e.target.value })}
+                        value={localPayment.midtransClientKey}
+                        onChange={(e) => setLocalPayment({ ...localPayment, midtransClientKey: e.target.value })}
                         placeholder="SB-Mid-client-..."
                       />
                     </div>
@@ -300,11 +371,19 @@ export default function AdminSettings() {
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="px-6 py-2 bg-[#2271b1] text-white font-medium hover:bg-[#135e96] transition-colors rounded shadow-sm flex items-center"
+            className="px-6 py-2 bg-[#2271b1] text-white font-medium hover:bg-[#135e96] transition-colors rounded shadow-sm flex items-center disabled:opacity-70"
           >
             {isSaving ? "Saving..." : "Save Changes"}
           </button>
-          {isSaving && <span className="text-sm text-green-600 flex items-center"><Check className="w-4 h-4 mr-1" /> Settings saved.</span>}
+          {saveMessage && (
+            <span className={cn(
+                "text-sm flex items-center animate-in fade-in",
+                saveMessage.includes("Error") ? "text-red-600" : "text-green-600"
+            )}>
+                {saveMessage.includes("Error") ? null : <Check className="w-4 h-4 mr-1" />} 
+                {saveMessage}
+            </span>
+          )}
         </div>
       </div>
     </div>

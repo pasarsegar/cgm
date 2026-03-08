@@ -5,41 +5,41 @@ import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Youtube } from "luci
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1d2327] text-white pt-16 pb-8">
+    <footer className="pt-16 pb-8" style={{ backgroundColor: 'var(--footer-bg)', color: 'var(--footer-text)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Column 1: Brand Info */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-black italic text-white">LCP<span className="text-primary">AUTO</span></span>
+              <span className="text-2xl font-black italic" style={{ color: 'var(--footer-text)' }}>LCP<span className="text-primary">AUTO</span></span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed opacity-70">
               Your premier partner for high-performance automotive tuning and premium car parts. Based in Jakarta, serving enthusiasts worldwide.
             </p>
             <div className="flex items-center space-x-4">
-              <Link href="#" className="p-2 bg-gray-800 rounded-full hover:bg-primary transition-all"><Instagram className="w-4 h-4" /></Link>
-              <Link href="#" className="p-2 bg-gray-800 rounded-full hover:bg-primary transition-all"><Facebook className="w-4 h-4" /></Link>
-              <Link href="#" className="p-2 bg-gray-800 rounded-full hover:bg-primary transition-all"><Twitter className="w-4 h-4" /></Link>
-              <Link href="#" className="p-2 bg-gray-800 rounded-full hover:bg-primary transition-all"><Youtube className="w-4 h-4" /></Link>
+              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Instagram className="w-4 h-4" /></Link>
+              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Facebook className="w-4 h-4" /></Link>
+              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Twitter className="w-4 h-4" /></Link>
+              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Youtube className="w-4 h-4" /></Link>
             </div>
           </div>
 
           {/* Column 2: Quick Links */}
           <div className="space-y-6">
             <h4 className="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li><Link href="/shop" className="hover:text-white transition-colors">Shop All Parts</Link></li>
-              <li><Link href="/tuning" className="hover:text-white transition-colors">Tuning Services</Link></li>
-              <li><Link href="/about" className="hover:text-white transition-colors">Our Story</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link></li>
-              <li><Link href="/shipping" className="hover:text-white transition-colors">Shipping & Returns</Link></li>
+            <ul className="space-y-3 text-sm opacity-70">
+              <li><Link href="/shop" className="hover:opacity-100 transition-opacity">Shop All Parts</Link></li>
+              <li><Link href="/tuning" className="hover:opacity-100 transition-opacity">Tuning Services</Link></li>
+              <li><Link href="/about" className="hover:opacity-100 transition-opacity">Our Story</Link></li>
+              <li><Link href="/contact" className="hover:opacity-100 transition-opacity">Contact Support</Link></li>
+              <li><Link href="/shipping" className="hover:opacity-100 transition-opacity">Shipping & Returns</Link></li>
             </ul>
           </div>
 
           {/* Column 3: Contact Info */}
           <div className="space-y-6">
             <h4 className="text-sm font-black uppercase tracking-widest text-primary">Contact Us</h4>
-            <ul className="space-y-4 text-sm text-gray-400">
+            <ul className="space-y-4 text-sm opacity-70">
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
                 <span>Jl. Sudirman No. 45, Jakarta Selatan, 12190</span>
@@ -58,12 +58,12 @@ export default function Footer() {
           {/* Column 4: Newsletter */}
           <div className="space-y-6">
             <h4 className="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4>
-            <p className="text-sm text-gray-400">Subscribe to get latest tuning news and special offers.</p>
+            <p className="text-sm opacity-70">Subscribe to get latest tuning news and special offers.</p>
             <form className="flex space-x-2">
               <input 
                 type="email" 
                 placeholder="Your email" 
-                className="flex-1 bg-gray-800 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                className="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50"
               />
               <button className="bg-primary text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">
                 Join
@@ -73,11 +73,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between text-xs text-gray-500 space-y-4 md:space-y-0 uppercase tracking-widest font-bold">
+        <div className="pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold">
           <p>© 2024 LCP AUTO CARS. ALL RIGHTS RESERVED.</p>
           <div className="flex space-x-6">
-            <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white">Terms of Service</Link>
+            <Link href="/privacy" className="hover:opacity-100">Privacy Policy</Link>
+            <Link href="/terms" className="hover:opacity-100">Terms of Service</Link>
           </div>
         </div>
       </div>

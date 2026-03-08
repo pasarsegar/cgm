@@ -19,59 +19,68 @@ type CategoryFormData = z.infer<typeof categorySchema>;
 
 interface CategoryFormProps {
   category?: Category | null;
+  categories: Category[];
   onClose: () => void;
   onSave: () => void;
 }
 
-export default function CategoryForm({ category, onClose, onSave }: CategoryFormProps) {
-  const [allCategories, setAllCategories] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const { data } = await supabase.from('categories').select('*').order('name');
-      setAllCategories(data || []);
-    };
-    fetchCategories();
-  }, []);
-
+export default function CategoryForm({ category, categories, onClose, onSave }: CategoryFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    reset
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: category?.name || "",
       slug: category?.slug || "",
-      parent_id: category?.parent_id || null,
+      parent_id: category?.parent_id || "", // Ensure empty string for controlled input
     },
   });
+
+  useEffect(() => {
+    if (category) {
+      reset({
+        name: category.name,
+        slug: category.slug,
+        parent_id: category.parent_id || "",
+      });
+    } else {
+      reset({
+        name: "",
+        slug: "",
+        parent_id: "",
+      });
+    }
+  }, [category, reset]);
 
   const onSubmit = async (data: CategoryFormData) => {
     const payload = {
       name: data.name,
       slug: data.slug,
-      parent_id: data.parent_id || null,
+      parent_id: data.parent_id || null, // Convert empty string back to null
     };
 
     let error;
-    if (category?.id) {
-      const { error: updateError } = await supabase
-        .from('categories')
-        .update(payload)
-        .eq('id', category.id);
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase
-        .from('categories')
-        .insert([{ ...payload, id: crypto.randomUUID() }]);
-      error = insertError;
-    }
+    try {
+      if (category?.id) {
+        const { error: updateError } = await supabase
+          .from('categories')
+          .update(payload)
+          .eq('id', category.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('categories')
+          .insert([{ ...payload, id: crypto.randomUUID() }]);
+        error = insertError;
+      }
 
-    if (error) {
-      alert('Error saving category: ' + error.message);
-    } else {
+      if (error) throw error;
       onSave();
+    } catch (err: any) {
+      alert('Error saving category: ' + err.message);
     }
   };
 
@@ -114,8 +123,8 @@ export default function CategoryForm({ category, onClose, onSave }: CategoryForm
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
               >
                 <option value="">None (Top Level)</option>
-                {allCategories
-                  .filter(c => !c.parent_id && c.id !== category?.id)
+                {categories
+                  .filter(c => !c.parent_id && c.id !== category?.id) // Only show top-level categories and prevent self-referencing
                   .map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}

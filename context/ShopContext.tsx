@@ -29,6 +29,16 @@ export interface PaymentSettings {
   midtransClientKey: string;
 }
 
+export interface ThemeSettings {
+  bodyBackgroundColor: string;
+  primaryColor: string;
+  secondaryColor: string;
+  textColor: string;
+  fontFamily: string;
+  footerBackgroundColor: string;
+  footerTextColor: string;
+}
+
 interface CartItem extends Product {
   quantity: number;
   selectedVariation?: Variation;
@@ -50,6 +60,10 @@ interface ShopContextType {
   // Payment
   paymentSettings: PaymentSettings;
   setPaymentSettings: (settings: PaymentSettings) => void;
+
+  // Theme
+  themeSettings: ThemeSettings;
+  setThemeSettings: (settings: ThemeSettings) => void;
 
   // Cart
   cart: CartItem[];
@@ -81,10 +95,21 @@ const initialPaymentSettings: PaymentSettings = {
   midtransClientKey: ""
 };
 
+const initialThemeSettings: ThemeSettings = {
+  bodyBackgroundColor: "#F0F3F7",
+  primaryColor: "#ff4d00",
+  secondaryColor: "#1d2327",
+  textColor: "#333333",
+  fontFamily: "Inter",
+  footerBackgroundColor: "#1d2327", // Default to dark footer to match server render
+  footerTextColor: "#ffffff"
+};
+
 export function ShopProvider({ children }: { children: React.ReactNode }) {
   const [slides, setSlidesState] = useState<Slide[]>([]);
   const [headerSettings, setHeaderSettingsState] = useState<HeaderSettings>(initialHeaderSettings);
   const [paymentSettings, setPaymentSettingsState] = useState<PaymentSettings>(initialPaymentSettings);
+  const [themeSettings, setThemeSettingsState] = useState<ThemeSettings>(initialThemeSettings);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,10 +131,13 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     const { data: settingsData } = await supabase.from('settings').select('*');
     if (settingsData) {
       const header = settingsData.find(s => s.key === 'header_settings')?.value;
-      if (header) setHeaderSettingsState(JSON.parse(header));
+      if (header) setHeaderSettingsState(prev => ({ ...prev, ...JSON.parse(header) }));
 
       const payment = settingsData.find(s => s.key === 'payment_settings')?.value;
-      if (payment) setPaymentSettingsState(JSON.parse(payment));
+      if (payment) setPaymentSettingsState(prev => ({ ...prev, ...JSON.parse(payment) }));
+
+      const theme = settingsData.find(s => s.key === 'theme_settings')?.value;
+      if (theme) setThemeSettingsState(prev => ({ ...prev, ...JSON.parse(theme) }));
     }
 
     // Cart stays in localStorage as it's client-side only usually
@@ -146,6 +174,14 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     setPaymentSettingsState(settings);
     await supabase.from('settings').upsert({
         key: 'payment_settings',
+        value: JSON.stringify(settings)
+    });
+  };
+
+  const setThemeSettings = async (settings: ThemeSettings) => {
+    setThemeSettingsState(settings);
+    await supabase.from('settings').upsert({
+        key: 'theme_settings',
         value: JSON.stringify(settings)
     });
   };
@@ -194,6 +230,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       slides, setSlides, addSlide, removeSlide, updateSlide,
       headerSettings, setHeaderSettings,
       paymentSettings, setPaymentSettings,
+      themeSettings, setThemeSettings,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, cartCount,
       loading, refreshData: fetchData
     }}>

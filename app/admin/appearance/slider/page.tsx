@@ -8,12 +8,13 @@ import {
   Edit2, 
   Image as ImageIcon,
   Save,
-  X
+  X,
+  Upload
 } from "lucide-react";
 
 export default function AdminSlider() {
   const { slides, setSlides, addSlide, removeSlide } = useShop();
-  const [isEditing, setIsEditing] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Slide | null>(null);
 
   const handleEdit = (slide: Slide) => {
@@ -23,8 +24,9 @@ export default function AdminSlider() {
 
   const handleSave = () => {
     if (editForm) {
-      if (editForm.id === 0) {
-        addSlide({ ...editForm, id: Date.now() });
+      if (isEditing === 'new') {
+        // Generate a random ID for new slides
+        addSlide({ ...editForm, id: crypto.randomUUID() });
       } else {
         setSlides(slides.map(s => s.id === editForm.id ? editForm : s));
       }
@@ -34,9 +36,9 @@ export default function AdminSlider() {
   };
 
   const handleAddNew = () => {
-    setIsEditing(0);
+    setIsEditing('new');
     setEditForm({
-      id: 0,
+      id: "",
       title: "",
       subtitle: "",
       description: "",
@@ -44,6 +46,20 @@ export default function AdminSlider() {
       buttonText: "Shop Now",
       buttonLink: "/shop"
     });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (editForm) {
+        setEditForm({ ...editForm, image: reader.result as string });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -94,7 +110,7 @@ export default function AdminSlider() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="font-bold text-gray-900">{isEditing === 0 ? "Add New Slide" : "Edit Slide"}</h3>
+              <h3 className="font-bold text-gray-900">{isEditing === 'new' ? "Add New Slide" : "Edit Slide"}</h3>
               <button onClick={() => setIsEditing(null)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -131,12 +147,34 @@ export default function AdminSlider() {
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Image URL</label>
-                <input 
-                  value={editForm.image}
-                  onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
-                  placeholder="https://..."
-                />
+                <div className="flex gap-2">
+                    <input 
+                    value={editForm.image}
+                    onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                    placeholder="https://..."
+                    />
+                    <button 
+                        type="button"
+                        onClick={() => document.getElementById('slider-upload')?.click()}
+                        className="bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-gray-200 flex items-center gap-2 uppercase tracking-widest whitespace-nowrap"
+                    >
+                        <Upload className="w-4 h-4" />
+                        Upload
+                    </button>
+                    <input 
+                        id="slider-upload" 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleFileUpload} 
+                    />
+                </div>
+                {editForm.image && (
+                    <div className="mt-2 h-32 w-full bg-gray-50 rounded-lg border border-gray-100 overflow-hidden relative">
+                        <img src={editForm.image} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

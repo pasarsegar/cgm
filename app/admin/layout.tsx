@@ -39,7 +39,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Package,
     children: [
       { name: "All Products", href: "/admin/products" },
-      { name: "Add New", href: "/admin/products?action=new" },
       { name: "Categories", href: "/admin/products?view=categories" },
     ]
   },
@@ -68,6 +67,7 @@ const sidebarItems: SidebarItem[] = [
       { name: "Slider", href: "/admin/appearance/slider" },
       { name: "Menus", href: "/admin/appearance/menus" },
       { name: "Widgets", href: "/admin/appearance/widgets" },
+      { name: "Theme", href: "/admin/appearance/theme" },
     ]
   },
   { 

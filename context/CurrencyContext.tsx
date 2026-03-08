@@ -24,25 +24,16 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       let countryCode = "US"; // Default
 
       try {
-        // Try primary IP API
-        const response = await fetch("https://ipapi.co/json/");
+        // Try ipwho.is (Free, no key, supports SSL & CORS)
+        const response = await fetch("https://ipwho.is/");
         if (response.ok) {
           const data = await response.json();
-          countryCode = data.country_code;
-        } else {
-          throw new Error("Primary API failed");
+          if (data.success) {
+            countryCode = data.country_code;
+          }
         }
       } catch (e) {
-        // Fallback if primary fails or is blocked
-        try {
-          const response = await fetch("https://ip-api.com/json/");
-          if (response.ok) {
-            const data = await response.json();
-            countryCode = data.countryCode;
-          }
-        } catch (e2) {
-          console.warn("All IP detection services failed, using default USD");
-        }
+        console.warn("IP detection failed, defaulting to USD", e);
       }
 
       if (countryCode === "ID") {

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { 
   Plus, 
   Search, 
   Edit2, 
   Trash2, 
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FolderTree
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
@@ -15,6 +17,9 @@ import ProductForm from "./ProductForm";
 import CategoryForm from "./CategoryForm";
 
 export default function AdminProducts() {
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view");
+  
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +74,26 @@ export default function AdminProducts() {
     }
   };
 
+  const handleDeleteCategory = async (id: string) => {
+    if (confirm("Are you sure you want to delete this category?")) {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Error deleting category: ' + error.message);
+      } else {
+        fetchData();
+      }
+    }
+  };
+
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setIsCategoryFormOpen(true);
+  };
+
   const handleEdit = (product: any) => {
     setEditingProduct(product);
     setIsFormOpen(true);
@@ -92,7 +117,7 @@ export default function AdminProducts() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input 
             type="text"
-            placeholder="Search products..."
+            placeholder={view === 'categories' ? "Search categories..." : "Search products..."}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -106,19 +131,84 @@ export default function AdminProducts() {
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
           </button>
-          <button 
-            onClick={handleAdd}
-            className="bg-primary hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200 font-bold text-sm uppercase tracking-wider shadow-lg shadow-primary/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Product</span>
-          </button>
+          {view !== 'categories' && (
+            <button 
+              onClick={handleAdd}
+              className="bg-primary hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200 font-bold text-sm uppercase tracking-wider shadow-lg shadow-primary/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Product</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Products Table */}
+      {/* Content */}
       {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>
+      ) : view === 'categories' ? (
+        <div className="overflow-x-auto border border-gray-100 rounded-xl bg-white shadow-sm">
+            <table className="w-full text-left border-collapse">
+            <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Name</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Slug</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Parent Category</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+                {categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((category) => {
+                  const parent = categories.find(c => c.id === category.parent_id);
+                  return (
+                    <tr key={category.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex-shrink-0 flex items-center justify-center text-orange-500">
+                                <FolderTree className="w-4 h-4" />
+                            </div>
+                            <div className="font-bold text-gray-900 text-sm">{category.name}</div>
+                        </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 font-mono bg-gray-50/50 rounded px-2">
+                            {category.slug}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                            {parent ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600">
+                                    {parent.name}
+                                </span>
+                            ) : (
+                                <span className="text-gray-400 text-xs italic">-</span>
+                            )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end space-x-2">
+                            <button 
+                            onClick={() => handleEditCategory(category)}
+                            className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                            >
+                            <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                            onClick={() => handleDeleteCategory(category.id)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            >
+                            <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                        </td>
+                    </tr>
+                  );
+                })}
+                {categories.length === 0 && (
+                    <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">No categories found.</td>
+                    </tr>
+                )}
+            </tbody>
+            </table>
+        </div>
       ) : (
         <div className="overflow-x-auto border border-gray-100 rounded-xl bg-white shadow-sm">
             <table className="w-full text-left border-collapse">
@@ -201,6 +291,7 @@ export default function AdminProducts() {
       {isCategoryFormOpen && (
         <CategoryForm 
           category={editingCategory}
+          categories={categories}
           onClose={() => setIsCategoryFormOpen(false)}
           onSave={() => {
             fetchData();

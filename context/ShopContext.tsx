@@ -17,6 +17,10 @@ export interface Slide {
   secondButtonLink?: string;
 }
 
+export interface GeneralSettings {
+  enableAutoCurrency: boolean;
+}
+
 export interface HeaderSettings {
   height: string;
   backgroundColor: string;
@@ -24,6 +28,14 @@ export interface HeaderSettings {
   fontSize: string;
   buttonColor: string;
   buttonTextColor: string;
+  logoUrl?: string;
+  logoHeight?: string;
+  logoPosition?: 'left' | 'center' | 'right';
+  menuPosition?: 'left' | 'center' | 'right';
+  iconsPosition?: 'left' | 'center' | 'right';
+  showSearch: boolean;
+  showAccount: boolean;
+  showCart: boolean;
 }
 
 export interface PaymentSettings {
@@ -64,6 +76,10 @@ interface ShopContextType {
   removeSlide: (id: string) => void;
   updateSlide: (id: string, slide: Slide) => void;
 
+  // General
+  generalSettings: GeneralSettings;
+  setGeneralSettings: (settings: GeneralSettings) => void;
+
   // Header
   headerSettings: HeaderSettings;
   setHeaderSettings: (settings: HeaderSettings) => void;
@@ -91,13 +107,24 @@ interface ShopContextType {
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
+const initialGeneralSettings: GeneralSettings = {
+  enableAutoCurrency: true
+};
+
 const initialHeaderSettings: HeaderSettings = {
   height: "80px",
   backgroundColor: "#ffffff",
   textColor: "#666666",
   fontSize: "14px",
   buttonColor: "#ff4d00",
-  buttonTextColor: "#ffffff"
+  buttonTextColor: "#ffffff",
+  showSearch: true,
+  showAccount: true,
+  showCart: true,
+  logoHeight: "40px",
+  logoPosition: 'left',
+  menuPosition: 'center',
+  iconsPosition: 'right'
 };
 
 const initialPaymentSettings: PaymentSettings = {
@@ -126,6 +153,7 @@ const initialThemeSettings: ThemeSettings = {
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
   const [slides, setSlidesState] = useState<Slide[]>([]);
+  const [generalSettings, setGeneralSettingsState] = useState<GeneralSettings>(initialGeneralSettings);
   const [headerSettings, setHeaderSettingsState] = useState<HeaderSettings>(initialHeaderSettings);
   const [paymentSettings, setPaymentSettingsState] = useState<PaymentSettings>(initialPaymentSettings);
   const [themeSettings, setThemeSettingsState] = useState<ThemeSettings>(initialThemeSettings);
@@ -149,6 +177,9 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     // Fetch Settings
     const { data: settingsData } = await supabase.from('settings').select('*');
     if (settingsData) {
+      const general = settingsData.find(s => s.key === 'general_settings')?.value;
+      if (general) setGeneralSettingsState(prev => ({ ...prev, ...JSON.parse(general) }));
+
       const header = settingsData.find(s => s.key === 'header_settings')?.value;
       if (header) setHeaderSettingsState(prev => ({ ...prev, ...JSON.parse(header) }));
 
@@ -181,6 +212,14 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         name: 'Main Slider',
         slides: newSlides,
         active: true
+    });
+  };
+
+  const setGeneralSettings = async (settings: GeneralSettings) => {
+    setGeneralSettingsState(settings);
+    await supabase.from('settings').upsert({
+        key: 'general_settings',
+        value: JSON.stringify(settings)
     });
   };
 
@@ -253,6 +292,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   return (
     <ShopContext.Provider value={{
       slides, setSlides, addSlide, removeSlide, updateSlide,
+      generalSettings, setGeneralSettings,
       headerSettings, setHeaderSettings,
       paymentSettings, setPaymentSettings,
       themeSettings, setThemeSettings,

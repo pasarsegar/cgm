@@ -5,13 +5,18 @@ import { useShop } from "@/context/ShopContext";
 import { Save, Loader2, RotateCcw } from "lucide-react";
 
 export default function AdminTheme() {
-  const { themeSettings, setThemeSettings } = useShop();
+  const { themeSettings, setThemeSettings, headerSettings, setHeaderSettings } = useShop();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState(themeSettings);
+
+  const updateHeaderSettings = (update: Partial<typeof headerSettings>) => {
+      setHeaderSettings({ ...headerSettings, ...update });
+  };
 
   const handleSave = async () => {
     setLoading(true);
     await setThemeSettings(settings);
+    // Header settings are already updated in context via setHeaderSettings
     setLoading(false);
   };
 
@@ -49,7 +54,108 @@ export default function AdminTheme() {
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 space-y-8">
-            {/* Colors Section */}
+            {/* Header Section */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Header Customization</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Logo URL</label>
+                <input 
+                    type="text" 
+                    value={headerSettings.logoUrl || ''}
+                    onChange={(e) => updateHeaderSettings({ logoUrl: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm"
+                    placeholder="https://example.com/logo.png"
+                />
+                <p className="text-xs text-gray-400 mt-2">Leave empty to use Site Title.</p>
+            </div>
+            <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Logo Height</label>
+                <input 
+                    type="text" 
+                    value={headerSettings.logoHeight || '40px'}
+                    onChange={(e) => updateHeaderSettings({ logoHeight: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm"
+                    placeholder="e.g. 40px"
+                />
+            </div>
+            
+            <div className="col-span-2">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Layout</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-2">Logo Position</label>
+                        <select 
+                            value={headerSettings.logoPosition || 'left'}
+                            onChange={(e) => updateHeaderSettings({ logoPosition: e.target.value as any })}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                        >
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-2">Menu Position</label>
+                        <select 
+                            value={headerSettings.menuPosition || 'center'}
+                            onChange={(e) => updateHeaderSettings({ menuPosition: e.target.value as any })}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                        >
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-2">Icons Position</label>
+                        <select 
+                            value={headerSettings.iconsPosition || 'right'}
+                            onChange={(e) => updateHeaderSettings({ iconsPosition: e.target.value as any })}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                        >
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Header Icons</label>
+                <div className="flex space-x-6">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={headerSettings.showSearch}
+                            onChange={(e) => updateHeaderSettings({ showSearch: e.target.checked })}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Show Search</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={headerSettings.showAccount}
+                            onChange={(e) => updateHeaderSettings({ showAccount: e.target.checked })}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Show Account</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={headerSettings.showCart}
+                            onChange={(e) => updateHeaderSettings({ showCart: e.target.checked })}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Show Cart</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Colors Section */}
             <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Colors</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

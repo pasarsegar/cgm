@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { 
   Search, 
   ChevronDown, 
@@ -13,10 +14,31 @@ import {
   Image as ImageIcon, 
   Code, 
   List,
-  MousePointer2
+  MousePointer2,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Widget, WidgetArea } from "@/lib/types";
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  TouchSensor
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const availableWidgets: { type: Widget['type']; name: string; icon: any; desc: string }[] = [
   { type: 'search', name: 'Search', icon: Search, desc: 'A search form for your site.' },
@@ -27,34 +49,185 @@ const availableWidgets: { type: Widget['type']; name: string; icon: any; desc: s
   { type: 'image', name: 'Image', icon: ImageIcon, desc: 'Displays an image.' },
 ];
 
-export default function AdminWidgets() {
-  const [widgetAreas, setWidgetAreas] = useState<WidgetArea[]>([
-    { 
-      id: "main-sidebar", 
-      name: "Main Sidebar", 
-      description: "Appears on the right of your blog posts.",
-      widgets: [
-        { id: "w-1", type: "search", title: "Search Site", settings: {} },
-        { id: "w-2", type: "recent_posts", title: "Latest News", settings: { count: 5 } },
-      ]
-    },
-    { 
-      id: "footer-1", 
-      name: "Footer Column 1", 
-      description: "First column in your site footer.",
-      widgets: [
-        { id: "w-3", type: "text", title: "About Us", settings: { text: "LCP Auto Cars is your premium tuning partner." } },
-      ]
-    },
-    { 
-      id: "footer-2", 
-      name: "Footer Column 2", 
-      description: "Second column in your site footer.",
-      widgets: []
-    }
-  ]);
+function SortableWidget({ 
+  widget, 
+  expanded, 
+  toggleExpand, 
+  removeWidget, 
+  updateWidget 
+}: { 
+  widget: Widget; 
+  expanded: boolean; 
+  toggleExpand: () => void; 
+  removeWidget: () => void;
+  updateWidget: (updated: Partial<Widget>) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: widget.id });
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    position: 'relative' as const,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-0.5">
+      <div className="flex items-center bg-white border border-[#ccd0d4] hover:border-[#b1b4b6] transition-colors group">
+        <div 
+          {...attributes} 
+          {...listeners}
+          className="p-2 border-r border-[#ccd0d4] text-gray-400 group-hover:text-gray-600 cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+        <div className="flex-1 px-3 py-2 flex items-center justify-between text-sm">
+          <span className="font-medium">{widget.title}</span>
+          <span className="text-[10px] text-gray-400 italic uppercase">{widget.type}</span>
+        </div>
+        <button 
+          onClick={toggleExpand}
+          className="p-2 border-l border-[#ccd0d4] text-gray-400 hover:text-[#2271b1] transition-colors"
+        >
+          {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </button>
+      </div>
+      
+      {expanded && (
+        <div className="bg-white border border-[#ccd0d4] border-t-0 p-4 space-y-4 shadow-inner text-xs animate-in slide-in-from-top-2 duration-200">
+          <div>
+            <label className="block mb-1 text-gray-600 font-bold">Title</label>
+            <input 
+              type="text" 
+              className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]" 
+              value={widget.title} 
+              onChange={(e) => updateWidget({ title: e.target.value })}
+            />
+          </div>
+          {widget.type === 'recent_posts' && (
+            <div>
+              <label className="block mb-1 text-gray-600 font-bold">Number of posts to show</label>
+              <input 
+                type="number" 
+                className="w-20 border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]" 
+                value={widget.settings.count || 5} 
+                onChange={(e) => updateWidget({ settings: { ...widget.settings, count: parseInt(e.target.value) } })}
+              />
+            </div>
+          )}
+          {(widget.type === 'text' || widget.type === 'custom_html') && (
+            <div>
+              <label className="block mb-1 text-gray-600 font-bold">Content</label>
+              <textarea 
+                className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1] h-32 resize-none" 
+                value={widget.settings.text || ""} 
+                onChange={(e) => updateWidget({ settings: { ...widget.settings, text: e.target.value } })}
+              />
+            </div>
+          )}
+          <div className="flex items-center justify-between pt-3 border-t border-[#f0f0f1]">
+            <button 
+              onClick={removeWidget}
+              className="text-red-600 hover:underline"
+            >
+              Delete
+            </button>
+            <button onClick={toggleExpand} className="text-gray-500 hover:underline">Close</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function AdminWidgets() {
+  const [widgetAreas, setWidgetAreas] = useState<WidgetArea[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedWidgets, setExpandedWidgets] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+        activationConstraint: {
+            distance: 8,
+        },
+    }),
+    useSensor(TouchSensor, {
+        activationConstraint: {
+            delay: 200,
+            tolerance: 5,
+        },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    fetchWidgetAreas();
+  }, []);
+
+  const fetchWidgetAreas = async () => {
+    setLoading(true);
+    // Fetch areas
+    const { data: areas, error: areasError } = await supabase
+        .from('widget_areas')
+        .select('*')
+        .order('name');
+
+    if (areasError) {
+        console.error('Error fetching widget areas:', areasError);
+        setLoading(false);
+        return;
+    }
+
+    // Fetch widgets for all areas
+    const { data: widgets, error: widgetsError } = await supabase
+        .from('widgets')
+        .select('*')
+        .order('order');
+
+    if (widgetsError) {
+        console.error('Error fetching widgets:', widgetsError);
+    }
+
+    // Combine
+    const fullAreas = areas.map(area => ({
+        ...area,
+        widgets: widgets?.filter(w => w.area_id === area.id) || []
+    }));
+
+    // If no areas exist, create defaults (for first run)
+    if (fullAreas.length === 0) {
+        const defaults = [
+            { id: 'main-sidebar', name: 'Main Sidebar', description: 'Appears on the right of blog posts.' },
+            { id: 'footer-1', name: 'Footer Column 1', description: 'First column in the footer.' },
+            { id: 'footer-2', name: 'Footer Column 2', description: 'Second column in the footer.' },
+            { id: 'footer-3', name: 'Footer Column 3', description: 'Third column in the footer.' },
+            { id: 'footer-4', name: 'Footer Column 4', description: 'Fourth column in the footer.' },
+        ];
+        
+        // Insert defaults
+        for (const def of defaults) {
+            await supabase.from('widget_areas').upsert(def);
+        }
+        
+        // Re-fetch
+        fetchWidgetAreas();
+        return;
+    }
+
+    setWidgetAreas(fullAreas);
+    setLoading(false);
+  };
 
   const toggleWidget = (id: string) => {
     setExpandedWidgets(prev => 
@@ -62,30 +235,124 @@ export default function AdminWidgets() {
     );
   };
 
-  const removeWidget = (areaId: string, widgetId: string) => {
+  const removeWidget = async (areaId: string, widgetId: string) => {
+    // Optimistic update
     setWidgetAreas(areas => areas.map(area => {
       if (area.id === areaId) {
         return { ...area, widgets: area.widgets.filter(w => w.id !== widgetId) };
       }
       return area;
     }));
+
+    // DB update
+    await supabase.from('widgets').delete().eq('id', widgetId);
   };
 
-  const addWidget = (areaId: string, type: Widget['type']) => {
-    const newWidget: Widget = {
-      id: `w-${Date.now()}`,
+  const addWidget = async (areaId: string, type: Widget['type']) => {
+    const area = widgetAreas.find(a => a.id === areaId);
+    if (!area) return;
+
+    const newWidget: any = {
+      id: crypto.randomUUID(),
+      area_id: areaId,
       type,
       title: availableWidgets.find(w => w.type === type)?.name || "New Widget",
-      settings: {}
+      settings: {},
+      order: area.widgets.length // Append to end
     };
     
+    // Optimistic update
+    setWidgetAreas(areas => areas.map(a => {
+      if (a.id === areaId) {
+        return { ...a, widgets: [...a.widgets, newWidget] };
+      }
+      return a;
+    }));
+    toggleWidget(newWidget.id);
+
+    // DB Insert
+    const { error } = await supabase.from('widgets').insert(newWidget);
+    if (error) console.error('Error adding widget:', error);
+  };
+
+  const updateWidget = async (areaId: string, widgetId: string, updated: Partial<Widget>) => {
+    // Optimistic update
     setWidgetAreas(areas => areas.map(area => {
       if (area.id === areaId) {
-        return { ...area, widgets: [...area.widgets, newWidget] };
+        return { 
+            ...area, 
+            widgets: area.widgets.map(w => w.id === widgetId ? { ...w, ...updated } : w) 
+        };
       }
       return area;
     }));
-    toggleWidget(newWidget.id);
+
+    // Debounced DB update could go here, but for now we'll rely on the "Save" button for major edits
+    // or direct updates for small things if needed. 
+    // Actually, for better UX, let's just update local state and have a save button for the specific widget?
+    // The current UI shows a "Save" button inside the expanded widget. Let's make that trigger the DB update.
+  };
+
+  const saveWidgetToDB = async (widget: Widget) => {
+      setSaving(true);
+      const { error } = await supabase
+        .from('widgets')
+        .update({
+            title: widget.title,
+            settings: widget.settings
+        })
+        .eq('id', widget.id);
+      
+      setSaving(false);
+      if (error) alert('Error saving widget: ' + error.message);
+      else toggleWidget(widget.id); // Close on save
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    // Find source and destination areas
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // Find which area contains the active widget
+    const sourceArea = widgetAreas.find(area => area.widgets.some(w => w.id === activeId));
+    // The overId could be a widget ID or an area ID (if empty)
+    let destArea = widgetAreas.find(area => area.id === overId);
+    if (!destArea) {
+        destArea = widgetAreas.find(area => area.widgets.some(w => w.id === overId));
+    }
+
+    if (!sourceArea || !destArea) return;
+
+    // If moving within the same area
+    if (sourceArea.id === destArea.id) {
+        const oldIndex = sourceArea.widgets.findIndex(w => w.id === activeId);
+        const newIndex = sourceArea.widgets.findIndex(w => w.id === overId);
+        
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+            const newWidgets = arrayMove(sourceArea.widgets, oldIndex, newIndex);
+            
+            // Optimistic update
+            setWidgetAreas(areas => areas.map(a => 
+                a.id === sourceArea.id ? { ...a, widgets: newWidgets } : a
+            ));
+
+            // DB Update orders
+            const updates = newWidgets.map((w, index) => ({
+                id: w.id,
+                order: index,
+                area_id: sourceArea.id // Ensure area_id is set
+            }));
+
+            await supabase.from('widgets').upsert(updates);
+        }
+    } else {
+        // Moving between areas - more complex, for now let's stick to same-area sorting
+        // or simple add/remove. Drag-between-lists requires careful handling of IDs.
+        // For simplicity in this iteration, we'll only support reordering within the same list.
+    }
   };
 
   return (
@@ -94,20 +361,40 @@ export default function AdminWidgets() {
         {/* Left Column: Available Widgets */}
         <div className="w-full md:w-1/3 space-y-4">
           <h3 className="font-bold text-sm text-[#1d2327]">Available Widgets</h3>
-          <p className="text-xs text-gray-500 mb-4 italic">To activate a widget drag it to a sidebar or click on it to add it to a widget area.</p>
+          <p className="text-xs text-gray-500 mb-4 italic">Click "Add" to add a widget to an area.</p>
           
           <div className="grid grid-cols-1 gap-2">
             {availableWidgets.map((widget) => (
               <div 
                 key={widget.type}
-                className="bg-white border border-[#ccd0d4] p-3 hover:border-[#b1b4b6] cursor-move transition-all group flex items-start space-x-3"
+                className="bg-white border border-[#ccd0d4] p-3 hover:border-[#b1b4b6] transition-all group flex items-center justify-between"
               >
-                <div className="p-2 bg-gray-50 rounded text-gray-400 group-hover:text-[#2271b1]">
-                  <widget.icon className="w-5 h-5" />
+                <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gray-50 rounded text-gray-400 group-hover:text-[#2271b1]">
+                    <widget.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                    <h4 className="text-sm font-bold text-[#1d2327] group-hover:text-[#2271b1]">{widget.name}</h4>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{widget.desc}</p>
+                    </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-[#1d2327] group-hover:text-[#2271b1]">{widget.name}</h4>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{widget.desc}</p>
+                {/* Dropdown to add to specific area */}
+                <div className="relative group/add">
+                    <button className="p-1 hover:bg-gray-100 rounded text-[#2271b1]">
+                        <Plus className="w-5 h-5" />
+                    </button>
+                    <div className="absolute left-0 top-full mt-1 w-64 bg-white border border-gray-200 shadow-xl rounded-lg hidden group-hover/add:block z-[9999] py-1 max-h-80 overflow-y-auto">
+                        {widgetAreas.map(area => (
+                            <button
+                                key={area.id}
+                                onClick={() => addWidget(area.id, widget.type)}
+                                className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-700 border-b border-gray-100 last:border-0"
+                            >
+                                <span className="font-semibold block">{area.name}</span>
+                                {area.description && <span className="text-xs text-gray-400 block mt-0.5 truncate">{area.description}</span>}
+                            </button>
+                        ))}
+                    </div>
                 </div>
               </div>
             ))}
@@ -118,95 +405,66 @@ export default function AdminWidgets() {
         <div className="flex-1 space-y-4">
           <h3 className="font-bold text-sm text-[#1d2327]">Widget Areas</h3>
           
-          <div className="space-y-4">
-            {widgetAreas.map((area) => (
-              <div key={area.id} className="bg-white border border-[#ccd0d4] shadow-sm">
-                <div className="px-4 py-3 border-b border-[#ccd0d4] bg-[#f6f7f7] flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-sm">{area.name}</h4>
-                    {area.description && <p className="text-[11px] text-gray-500 mt-0.5">{area.description}</p>}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="text-[#2271b1] hover:text-[#135e96] transition-colors">
-                      <ChevronDown className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="p-4 min-h-[60px] bg-[#f0f0f1]/30 space-y-2">
-                  {area.widgets.length > 0 ? (
-                    area.widgets.map((widget) => (
-                      <div key={widget.id} className="space-y-0.5">
-                        <div className="flex items-center bg-white border border-[#ccd0d4] hover:border-[#b1b4b6] cursor-move transition-colors group">
-                          <div className="p-2 border-r border-[#ccd0d4] text-gray-400 group-hover:text-gray-600">
-                            <GripVertical className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1 px-3 py-2 flex items-center justify-between text-sm">
-                            <span className="font-medium">{widget.title}</span>
-                            <span className="text-[10px] text-gray-400 italic uppercase">{widget.type}</span>
-                          </div>
-                          <button 
-                            onClick={() => toggleWidget(widget.id)}
-                            className="p-2 border-l border-[#ccd0d4] text-gray-400 hover:text-[#2271b1] transition-colors"
-                          >
-                            {expandedWidgets.includes(widget.id) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </button>
+          {loading ? (
+              <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>
+          ) : (
+            <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+            >
+                <div className="space-y-4">
+                    {widgetAreas.map((area) => (
+                    <div key={area.id} className="bg-white border border-[#ccd0d4] shadow-sm">
+                        <div className="px-4 py-3 border-b border-[#ccd0d4] bg-[#f6f7f7] flex items-center justify-between">
+                        <div>
+                            <h4 className="font-bold text-sm">{area.name}</h4>
+                            {area.description && <p className="text-[11px] text-gray-500 mt-0.5">{area.description}</p>}
+                        </div>
                         </div>
                         
-                        {expandedWidgets.includes(widget.id) && (
-                          <div className="bg-white border border-[#ccd0d4] border-t-0 p-4 space-y-4 shadow-inner text-xs animate-in slide-in-from-top-2 duration-200">
-                            <div>
-                              <label className="block mb-1 text-gray-600 font-bold">Title</label>
-                              <input 
-                                type="text" 
-                                className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]" 
-                                defaultValue={widget.title} 
-                              />
-                            </div>
-                            {widget.type === 'recent_posts' && (
-                              <div>
-                                <label className="block mb-1 text-gray-600 font-bold">Number of posts to show</label>
-                                <input 
-                                  type="number" 
-                                  className="w-20 border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]" 
-                                  defaultValue={widget.settings.count || 5} 
-                                />
-                              </div>
-                            )}
-                            {(widget.type === 'text' || widget.type === 'custom_html') && (
-                              <div>
-                                <label className="block mb-1 text-gray-600 font-bold">Content</label>
-                                <textarea 
-                                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1] h-32 resize-none" 
-                                  defaultValue={widget.settings.text || ""} 
-                                />
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between pt-3 border-t border-[#f0f0f1]">
-                              <button 
-                                onClick={() => removeWidget(area.id, widget.id)}
-                                className="text-red-600 hover:underline"
-                              >
-                                Delete
-                              </button>
-                              <div className="space-x-3">
-                                <button onClick={() => toggleWidget(widget.id)} className="text-gray-500 hover:underline">Close</button>
-                                <button className="px-3 py-1 bg-[#2271b1] text-white font-bold rounded shadow-sm hover:bg-[#135e96] transition-colors">Save</button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="border-2 border-dashed border-[#ccd0d4] rounded-lg p-6 text-center text-gray-400 text-xs italic">
-                      Drag widgets here to add them to this area.
+                        <div className="p-4 min-h-[60px] bg-[#f0f0f1]/30">
+                            <SortableContext 
+                                items={area.widgets.map(w => w.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="space-y-2">
+                                    {area.widgets.length > 0 ? (
+                                        area.widgets.map((widget) => (
+                                            <div key={widget.id}>
+                                                <SortableWidget 
+                                                    widget={widget}
+                                                    expanded={expandedWidgets.includes(widget.id)}
+                                                    toggleExpand={() => toggleWidget(widget.id)}
+                                                    removeWidget={() => removeWidget(area.id, widget.id)}
+                                                    updateWidget={(updated) => updateWidget(area.id, widget.id, updated)}
+                                                />
+                                                {expandedWidgets.includes(widget.id) && (
+                                                    <div className="flex justify-end px-4 pb-4 bg-white border-x border-b border-[#ccd0d4] -mt-0.5">
+                                                        <button 
+                                                            onClick={() => saveWidgetToDB(widget)}
+                                                            disabled={saving}
+                                                            className="px-3 py-1 bg-[#2271b1] text-white font-bold rounded shadow-sm hover:bg-[#135e96] transition-colors text-xs disabled:opacity-50"
+                                                        >
+                                                            {saving ? "Saving..." : "Save"}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="border-2 border-dashed border-[#ccd0d4] rounded-lg p-6 text-center text-gray-400 text-xs italic">
+                                            Add widgets here using the list on the left.
+                                        </div>
+                                    )}
+                                </div>
+                            </SortableContext>
+                        </div>
                     </div>
-                  )}
+                    ))}
                 </div>
-              </div>
-            ))}
-          </div>
+            </DndContext>
+          )}
         </div>
       </div>
     </div>

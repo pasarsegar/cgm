@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAdmin, AdminLayoutStyle } from "@/lib/admin-context";
-import { useShop, HeaderSettings, PaymentSettings, ThemeSettings } from "@/context/ShopContext";
+import { useShop, HeaderSettings, PaymentSettings, ThemeSettings, GeneralSettings } from "@/context/ShopContext";
 import { 
   Settings, 
   Globe, 
@@ -19,9 +19,15 @@ import { cn } from "@/lib/utils";
 
 export default function AdminSettings() {
   const { layoutStyle, setLayoutStyle, siteName, setSiteName } = useAdmin();
-  const { headerSettings, setHeaderSettings, paymentSettings, setPaymentSettings, themeSettings, setThemeSettings } = useShop();
+  const { 
+    generalSettings, setGeneralSettings, 
+    headerSettings, setHeaderSettings, 
+    paymentSettings, setPaymentSettings, 
+    themeSettings, setThemeSettings 
+  } = useShop();
   
   // Local state for form handling to prevent excessive DB writes
+  const [localGeneral, setLocalGeneral] = useState<GeneralSettings>(generalSettings);
   const [localHeader, setLocalHeader] = useState<HeaderSettings>(headerSettings);
   const [localTheme, setLocalTheme] = useState<ThemeSettings>(themeSettings);
   const [localPayment, setLocalPayment] = useState<PaymentSettings>(paymentSettings);
@@ -31,6 +37,7 @@ export default function AdminSettings() {
   const [saveMessage, setSaveMessage] = useState("");
 
   // Sync local state with context when context updates (e.g. initial load)
+  useEffect(() => { setLocalGeneral(generalSettings); }, [generalSettings]);
   useEffect(() => { setLocalHeader(headerSettings); }, [headerSettings]);
   useEffect(() => { setLocalTheme(themeSettings); }, [themeSettings]);
   useEffect(() => { setLocalPayment(paymentSettings); }, [paymentSettings]);
@@ -41,6 +48,7 @@ export default function AdminSettings() {
     
     // Save settings via ShopContext logic (which persists to Supabase)
     Promise.all([
+        setGeneralSettings(localGeneral),
         setHeaderSettings(localHeader),
         setPaymentSettings(localPayment),
         setThemeSettings(localTheme)
@@ -122,6 +130,22 @@ export default function AdminSettings() {
                     placeholder="Just another Next.js site"
                   />
                   <p className="text-xs text-gray-500 mt-1">In a few words, explain what this site is about.</p>
+                </div>
+                
+                {/* Auto Currency Toggle */}
+                <div className="pt-4 border-t border-gray-100">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={localGeneral.enableAutoCurrency}
+                            onChange={(e) => setLocalGeneral({ ...localGeneral, enableAutoCurrency: e.target.checked })}
+                            className="rounded border-gray-300 text-[#2271b1] focus:ring-[#2271b1]"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Enable Auto Currency Switcher</span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                        Automatically switch currency to IDR for visitors from Indonesia based on their IP address.
+                    </p>
                 </div>
               </div>
             </div>

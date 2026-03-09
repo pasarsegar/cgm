@@ -1,3 +1,12 @@
+export interface MenuItem {
+  id: string;
+  label: string;
+  type: 'page' | 'custom' | 'category';
+  url?: string;
+  children?: MenuItem[];
+  isOpen?: boolean;
+}
+
 export interface Variation {
   id: string;
   name: string; // e.g. "S55", "N55", "B58"

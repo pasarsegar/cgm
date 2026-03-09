@@ -1,8 +1,45 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import { Wrench, Car, Zap, Thermometer, Battery, Disc } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import parse from 'html-react-parser';
+import BuilderRenderer from "@/components/builder/BuilderRenderer";
 
-export default function OurServices() {
+export const revalidate = 0;
+
+async function getServicesPageContent() {
+    const { data: page } = await supabase
+        .from('pages')
+        .select('*')
+        .eq('slug', 'our-services')
+        .eq('status', 'publish')
+        .single();
+    return page;
+}
+
+export default async function OurServices() {
+  const pageContent = await getServicesPageContent();
+
+  if (pageContent) {
+      return (
+        <main className="min-h-screen flex flex-col bg-background-shade">
+          <Header />
+          <div className="flex-grow">
+             {pageContent.content && pageContent.content.trim().startsWith('[') ? (
+                 <BuilderRenderer content={pageContent.content} />
+             ) : (
+                 <div className="container mx-auto px-4 py-12">
+                    <div className="prose max-w-none text-gray-700 dark:text-gray-300">
+                        {parse(pageContent.content)}
+                    </div>
+                 </div>
+             )}
+          </div>
+          <Footer />
+        </main>
+      );
+  }
+
   return (
     <main className="min-h-screen flex flex-col bg-background-shade">
       <Header />

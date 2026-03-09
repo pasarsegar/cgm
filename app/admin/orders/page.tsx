@@ -1,8 +1,8 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { sampleOrders, Order } from "@/data/orders";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { 
   Search, 
   Filter, 
@@ -25,6 +25,18 @@ import {
   Ban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+interface Order {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  date: string;
+  status: 'pending' | 'processing' | 'on-hold' | 'completed' | 'cancelled' | 'refunded' | 'failed';
+  total: number;
+  currency: string;
+  created_at: string;
+}
 
 const statusIcons: Record<string, any> = {
   'completed': CheckCircle2,
@@ -49,14 +61,61 @@ const statusColors: Record<string, string> = {
 export default function AdminOrders() {
   const searchParams = useSearchParams();
   const action = searchParams.get("action");
-  const [orders, setOrders] = useState<Order[]>(sampleOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    let query = supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching orders:', error);
+    } else {
+      setOrders(data as unknown as Order[]);
+    }
+    setLoading(false);
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      (order.customer_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (order.id?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (order.customer_email?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   if (action === "new") {
     return (
       <div className="space-y-6">
         <h2 className="text-xl font-medium border-b pb-4 mb-4">Add New Order</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+            <div className="flex">
+                <div className="flex-shrink-0">
+                    <AlertCircle className="h-5 w-5 text-yellow-400" />
+                </div>
+                <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                        Manual order creation is not yet fully implemented. This is a placeholder form.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 opacity-50 pointer-events-none">
+          {/* ... existing form fields ... */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Customer Name</label>
@@ -90,7 +149,8 @@ export default function AdminOrders() {
           </div>
         </div>
         <div className="flex justify-end pt-6 border-t">
-          <button className="px-6 py-2 bg-[#2271b1] text-white font-medium hover:bg-[#135e96] transition-colors rounded shadow-sm">
+          <Link href="/admin/orders" className="px-4 py-2 text-gray-600 hover:text-gray-900 mr-4">Cancel</Link>
+          <button disabled className="px-6 py-2 bg-[#2271b1] text-white font-medium hover:bg-[#135e96] transition-colors rounded shadow-sm opacity-50 cursor-not-allowed">
             Create Order
           </button>
         </div>
@@ -98,25 +158,29 @@ export default function AdminOrders() {
     );
   }
 
-  const filteredOrders = orders.filter(order => 
-    order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="space-y-4">
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50 p-3 border border-[#ccd0d4]">
         <div className="flex items-center space-x-2">
-          <select className="border border-[#ccd0d4] bg-white px-2 py-1 text-sm focus:border-[#2271b1] outline-none">
-            <option>All dates</option>
-            <option>March 2024</option>
-            <option>February 2024</option>
+          <select 
+            className="border border-[#ccd0d4] bg-white px-2 py-1 text-sm focus:border-[#2271b1] outline-none"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="processing">Processing</option>
+            <option value="on-hold">On Hold</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
           </select>
-          <select className="border border-[#ccd0d4] bg-white px-2 py-1 text-sm focus:border-[#2271b1] outline-none">
-            <option>Filter by customer</option>
-          </select>
-          <button className="px-3 py-1 border border-[#ccd0d4] bg-white hover:bg-[#f6f7f7] text-sm font-medium">Filter</button>
+          <button 
+            onClick={() => { setStatusFilter('all'); setSearchQuery(''); }}
+            className="px-3 py-1 border border-[#ccd0d4] bg-white hover:bg-[#f6f7f7] text-sm font-medium"
+          >
+            Reset
+          </button>
         </div>
         <div className="relative">
           <input 
@@ -131,7 +195,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Orders Table */}
-      <div className="border border-[#ccd0d4] overflow-x-auto">
+      <div className="border border-[#ccd0d4] overflow-x-auto bg-white min-h-[400px]">
         <table className="w-full text-left text-sm border-collapse">
           <thead>
             <tr className="bg-white border-b border-[#ccd0d4]">
@@ -146,7 +210,16 @@ export default function AdminOrders() {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length > 0 ? (
+            {loading ? (
+                <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                        <div className="flex justify-center items-center space-x-2">
+                            <RefreshCw className="w-5 h-5 animate-spin text-gray-400" />
+                            <span>Loading orders...</span>
+                        </div>
+                    </td>
+                </tr>
+            ) : filteredOrders.length > 0 ? (
               filteredOrders.map((order) => {
                 const StatusIcon = statusIcons[order.status] || AlertCircle;
                 return (
@@ -157,25 +230,25 @@ export default function AdminOrders() {
                     <td className="px-4 py-4">
                       <div className="flex flex-col">
                         <Link href={`/admin/orders/${order.id}`} className="text-[#2271b1] font-bold hover:text-[#135e96]">
-                          #{order.id} {order.customerName}
+                          #{order.id.slice(0, 8)}... {order.customer_name || 'Guest'}
                         </Link>
-                        <span className="text-xs text-gray-500 mt-1">{order.customerEmail}</span>
+                        <span className="text-xs text-gray-500 mt-1">{order.customer_email}</span>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-gray-600">
-                      {new Date(order.date).toLocaleDateString()}
+                      {new Date(order.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-4">
                       <span className={cn(
                         "inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium",
-                        statusColors[order.status]
+                        statusColors[order.status] || 'bg-gray-100 text-gray-600'
                       )}>
                         <StatusIcon className="w-3 h-3 mr-1" />
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {(order.status || 'unknown').charAt(0).toUpperCase() + (order.status || 'unknown').slice(1)}
                       </span>
                     </td>
                     <td className="px-4 py-4 font-medium">
-                      {order.currency === 'USD' ? '$' : 'Rp'}{order.total.toLocaleString()}
+                      {order.currency === 'USD' ? '$' : 'Rp'}{(order.total || 0).toLocaleString()}
                     </td>
                     <td className="px-4 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -185,9 +258,6 @@ export default function AdminOrders() {
                         <button className="p-1 hover:bg-gray-200 rounded text-red-600" title="Delete Order">
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        <button className="p-1 hover:bg-gray-200 rounded text-gray-600">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -195,7 +265,7 @@ export default function AdminOrders() {
               })
             ) : (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-500 italic">
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-500 italic">
                   No orders found matching your search.
                 </td>
               </tr>
@@ -204,21 +274,10 @@ export default function AdminOrders() {
         </table>
       </div>
 
-      {/* Pagination Simulation */}
       <div className="flex items-center justify-between text-sm text-gray-600 py-2">
         <div>{filteredOrders.length} items</div>
-        <div className="flex items-center space-x-1">
-          <button className="p-1 border border-[#ccd0d4] bg-white text-gray-400 cursor-not-allowed">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="px-3 py-1 border border-[#ccd0d4] bg-[#f0f0f1] font-medium">1</div>
-          <button className="p-1 border border-[#ccd0d4] bg-white hover:bg-[#f6f7f7]">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Pagination logic can be added here later if needed */}
       </div>
     </div>
   );
 }
-
-import Link from "next/link";

@@ -19,6 +19,8 @@ export interface HeaderSettings {
   backgroundColor: string;
   textColor: string;
   fontSize: string;
+  buttonColor: string;
+  buttonTextColor: string;
 }
 
 export interface PaymentSettings {
@@ -35,8 +37,14 @@ export interface ThemeSettings {
   secondaryColor: string;
   textColor: string;
   fontFamily: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  productButtonColor: string;
+  productButtonTextColor: string;
   footerBackgroundColor: string;
   footerTextColor: string;
+  footerButtonColor: string;
+  footerButtonTextColor: string;
 }
 
 interface CartItem extends Product {
@@ -84,7 +92,9 @@ const initialHeaderSettings: HeaderSettings = {
   height: "80px",
   backgroundColor: "#ffffff",
   textColor: "#666666",
-  fontSize: "14px"
+  fontSize: "14px",
+  buttonColor: "#ff4d00",
+  buttonTextColor: "#ffffff"
 };
 
 const initialPaymentSettings: PaymentSettings = {
@@ -101,8 +111,14 @@ const initialThemeSettings: ThemeSettings = {
   secondaryColor: "#1d2327",
   textColor: "#333333",
   fontFamily: "Inter",
+  buttonColor: "#ff4d00",
+  buttonTextColor: "#ffffff",
+  productButtonColor: "#ff4d00",
+  productButtonTextColor: "#ffffff",
   footerBackgroundColor: "#1d2327", // Default to dark footer to match server render
-  footerTextColor: "#ffffff"
+  footerTextColor: "#ffffff",
+  footerButtonColor: "#ff4d00",
+  footerButtonTextColor: "#ffffff"
 };
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
@@ -134,7 +150,10 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       if (header) setHeaderSettingsState(prev => ({ ...prev, ...JSON.parse(header) }));
 
       const payment = settingsData.find(s => s.key === 'payment_settings')?.value;
-      if (payment) setPaymentSettingsState(prev => ({ ...prev, ...JSON.parse(payment) }));
+      if (payment) {
+        console.log('Raw Payment Settings from DB:', payment);
+        setPaymentSettingsState(prev => ({ ...prev, ...JSON.parse(payment) }));
+      }
 
       const theme = settingsData.find(s => s.key === 'theme_settings')?.value;
       if (theme) setThemeSettingsState(prev => ({ ...prev, ...JSON.parse(theme) }));
@@ -220,7 +239,10 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const clearCart = () => saveCart([]);
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem("shop_cart");
+  };
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);

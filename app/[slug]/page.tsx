@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import ProductGrid from "@/components/ProductGrid";
 import parse from 'html-react-parser';
+import BuilderRenderer from "@/components/builder/BuilderRenderer";
 
 export const revalidate = 0; // Dynamic
 
@@ -69,31 +70,50 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
     <main className="min-h-screen flex flex-col bg-background-shade">
       <Header />
       
-      {/* Page Header / Hero Area */}
-      {(slug === 'hardware-licence' || slug === 'custom-tunes' || slug === 'dealers' || showProducts) ? (
-          <div className="bg-gray-900 text-white py-16">
-            <div className="container mx-auto px-4 text-center">
-                <h1 className="text-4xl font-bold mb-4 uppercase tracking-wider">{title}</h1>
-                {content && (
-                    <div className="max-w-2xl mx-auto text-gray-300 prose prose-invert">
-                        {parse(content)}
-                    </div>
-                )}
-            </div>
-          </div>
-      ) : (
-          <div className="container mx-auto px-4 py-12">
-               <h1 className="text-4xl font-bold mb-8 text-gray-900">{title}</h1>
-               <div className="prose max-w-none text-gray-700">
-                   {parse(content)}
-               </div>
-          </div>
-      )}
+      {/* Page Content */}
+      <div className="flex-1">
+          {(slug === 'hardware-licence' || slug === 'custom-tunes' || slug === 'dealers' || showProducts) ? (
+            <>
+              {/* Hero Section */}
+              <div className="bg-gray-900 text-white py-16">
+                <div className="container mx-auto px-4 text-center">
+                    <h1 className="text-4xl font-bold mb-4 uppercase tracking-wider">{title}</h1>
+                </div>
+              </div>
+              
+              {/* Page Body */}
+              <div className="flex-1">
+                  {content && content.trim().startsWith('[') ? (
+                      <BuilderRenderer content={content} />
+                  ) : (
+                      <div className="container mx-auto px-4 py-12">
+                          <div className="prose max-w-none text-gray-700 dark:text-gray-300">
+                              {content && parse(content)}
+                          </div>
+                      </div>
+                  )}
+              </div>
+            </>
+          ) : (
+              <div className="flex-1">
+                  {content && content.trim().startsWith('[') ? (
+                      <BuilderRenderer content={content} />
+                  ) : (
+                      <div className="container mx-auto px-4 py-12">
+                           <h1 className="text-4xl font-bold mb-8 text-gray-900">{title}</h1>
+                           <div className="prose max-w-none text-gray-700 dark:text-gray-300">
+                               {content && parse(content)}
+                           </div>
+                      </div>
+                  )}
+              </div>
+          )}
 
-      {/* Product Grid for Categories */}
-      {showProducts && (
-        <ProductGrid products={categoryProducts} title={title || ""} />
-      )}
+          {/* Product Grid for Categories */}
+          {showProducts && (
+            <ProductGrid products={categoryProducts} title={title || ""} />
+          )}
+      </div>
 
       <Footer />
     </main>

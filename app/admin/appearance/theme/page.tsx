@@ -22,8 +22,14 @@ export default function AdminTheme() {
         secondaryColor: "#1d2327",
         textColor: "#333333",
         fontFamily: "Inter",
+        buttonColor: "#ff4d00",
+        buttonTextColor: "#ffffff",
+        productButtonColor: "#ff4d00",
+        productButtonTextColor: "#ffffff",
         footerBackgroundColor: "#1d2327",
-        footerTextColor: "#ffffff"
+        footerTextColor: "#ffffff",
+        footerButtonColor: "#ff4d00",
+        footerButtonTextColor: "#ffffff"
     });
   };
 
@@ -121,6 +127,82 @@ export default function AdminTheme() {
                             />
                         </div>
                         <p className="text-xs text-gray-400 mt-2">Default color for body text.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Button Background</label>
+                        <div className="flex items-center space-x-3">
+                            <input 
+                                type="color" 
+                                value={settings.buttonColor}
+                                onChange={(e) => setSettings({ ...settings, buttonColor: e.target.value })}
+                                className="w-12 h-12 rounded-lg border border-gray-200 cursor-pointer p-1"
+                            />
+                            <input 
+                                type="text" 
+                                value={settings.buttonColor}
+                                onChange={(e) => setSettings({ ...settings, buttonColor: e.target.value })}
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm uppercase"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">Global button background color.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Button Text Color</label>
+                        <div className="flex items-center space-x-3">
+                            <input 
+                                type="color" 
+                                value={settings.buttonTextColor}
+                                onChange={(e) => setSettings({ ...settings, buttonTextColor: e.target.value })}
+                                className="w-12 h-12 rounded-lg border border-gray-200 cursor-pointer p-1"
+                            />
+                            <input 
+                                type="text" 
+                                value={settings.buttonTextColor}
+                                onChange={(e) => setSettings({ ...settings, buttonTextColor: e.target.value })}
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm uppercase"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">Global button text color.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Product Button Background</label>
+                        <div className="flex items-center space-x-3">
+                            <input 
+                                type="color" 
+                                value={settings.productButtonColor}
+                                onChange={(e) => setSettings({ ...settings, productButtonColor: e.target.value })}
+                                className="w-12 h-12 rounded-lg border border-gray-200 cursor-pointer p-1"
+                            />
+                            <input 
+                                type="text" 
+                                value={settings.productButtonColor}
+                                onChange={(e) => setSettings({ ...settings, productButtonColor: e.target.value })}
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm uppercase"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">Product "Add to Cart" button color.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Product Button Text</label>
+                        <div className="flex items-center space-x-3">
+                            <input 
+                                type="color" 
+                                value={settings.productButtonTextColor}
+                                onChange={(e) => setSettings({ ...settings, productButtonTextColor: e.target.value })}
+                                className="w-12 h-12 rounded-lg border border-gray-200 cursor-pointer p-1"
+                            />
+                            <input 
+                                type="text" 
+                                value={settings.productButtonTextColor}
+                                onChange={(e) => setSettings({ ...settings, productButtonTextColor: e.target.value })}
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm uppercase"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">Product button text color.</p>
                     </div>
                 </div>
             </div>

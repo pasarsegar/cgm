@@ -65,7 +65,10 @@ export default function Footer() {
                 placeholder="Your email" 
                 className="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50"
               />
-              <button className="bg-primary text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+              <button 
+                className="px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                style={{ backgroundColor: 'var(--footer-button-bg)', color: 'var(--footer-button-text)' }}
+              >
                 Join
               </button>
             </form>

@@ -79,7 +79,7 @@ export default function AdminSettings() {
   return (
     <div className="space-y-6">
       <div className="flex border-b border-[#ccd0d4] mb-6 overflow-x-auto">
-        {["General", "Header & Footer", "Payments", "Writing", "Reading"].map((tab) => (
+        {["General", "Header & Footer", "Payments"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -237,6 +237,40 @@ export default function AdminSettings() {
                   />
                   <p className="text-xs text-gray-500 mt-1">e.g. 14px, 1rem</p>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Button Background</label>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="color" 
+                      className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                      value={localHeader.buttonColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, buttonColor: e.target.value })}
+                    />
+                    <input 
+                      type="text" 
+                      className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
+                      value={localHeader.buttonColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, buttonColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Button Text Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="color" 
+                      className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                      value={localHeader.buttonTextColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, buttonTextColor: e.target.value })}
+                    />
+                    <input 
+                      type="text" 
+                      className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
+                      value={localHeader.buttonTextColor}
+                      onChange={(e) => setLocalHeader({ ...localHeader, buttonTextColor: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -278,6 +312,40 @@ export default function AdminSettings() {
                       className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
                       value={localTheme.footerTextColor}
                       onChange={(e) => setLocalTheme({ ...localTheme, footerTextColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Button Background</label>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="color" 
+                      className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                      value={localTheme.footerButtonColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerButtonColor: e.target.value })}
+                    />
+                    <input 
+                      type="text" 
+                      className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
+                      value={localTheme.footerButtonColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerButtonColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Button Text Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="color" 
+                      className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                      value={localTheme.footerButtonTextColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerButtonTextColor: e.target.value })}
+                    />
+                    <input 
+                      type="text" 
+                      className="w-full md:w-1/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none uppercase" 
+                      value={localTheme.footerButtonTextColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, footerButtonTextColor: e.target.value })}
                     />
                   </div>
                 </div>

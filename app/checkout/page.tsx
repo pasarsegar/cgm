@@ -15,6 +15,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [selectedGateway, setSelectedGateway] = useState<"xendit" | "midtrans" | "cod" | null>(null);
   const [orderId, setOrderId] = useState("");
+  const [createdAccount, setCreatedAccount] = useState<{email: string, password: string} | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -28,6 +29,9 @@ export default function CheckoutPage() {
   const shipping = cartTotal > 500 ? 0 : 50;
   const total = cartTotal + shipping;
 
+  // Debug payment settings
+  // console.log('Payment Settings in Checkout:', paymentSettings);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -40,10 +44,44 @@ export default function CheckoutPage() {
     
     try {
         const newOrderId = `ORD-${Date.now()}`; // Simple ID generation
+        let userId = null;
+
+        // 0. Auto-Register User (if not logged in)
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+            userId = user.id;
+        } else {
+            // Check if user already exists
+            // Since we can't easily check existence without admin rights, we'll try to sign up
+            // If it fails (email taken), we'll just proceed as guest.
+            const tempPassword = `LCP-${Math.random().toString(36).slice(-8).toUpperCase()}`;
+            
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                email: formData.email,
+                password: tempPassword,
+                options: {
+                    data: {
+                        full_name: `${formData.firstName} ${formData.lastName}`
+                    }
+                }
+            });
+
+            if (signUpData.user && !signUpError) {
+                userId = signUpData.user.id;
+                // If we got a session (email confirmation off), we are logged in.
+                // If not (confirmation on), account is created but not active.
+                // We'll show the password either way so they can use it.
+                setCreatedAccount({ email: formData.email, password: tempPassword });
+            } else {
+                console.log("Auto-registration skipped/failed (likely email exists):", signUpError?.message);
+            }
+        }
         
         // 1. Create Order
         const { error: orderError } = await supabase.from('orders').insert({
             id: newOrderId,
+            user_id: userId, // Link to user if available
             customer_name: `${formData.firstName} ${formData.lastName}`,
             customer_email: formData.email,
             shipping_address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
@@ -68,6 +106,40 @@ export default function CheckoutPage() {
         const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
 
         if (itemsError) throw itemsError;
+
+        // 3. Process Payment
+        if (selectedGateway === 'xendit' || selectedGateway === 'midtrans') {
+            const response = await fetch('/api/payment/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: newOrderId,
+                    amount: total,
+                    gateway: selectedGateway,
+                    customer: {
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        email: formData.email,
+                        address: formData.address,
+                        city: formData.city,
+                        postalCode: formData.postalCode
+                    },
+                    items: cart
+                })
+            });
+
+            const paymentData = await response.json();
+            
+            if (!response.ok) throw new Error(paymentData.error || 'Payment initialization failed');
+
+            if (paymentData.url) {
+                // Clear cart BEFORE redirecting to payment page to prevent user from going back and resubmitting
+                clearCart(); 
+                // Redirect to payment page
+                window.location.href = paymentData.url;
+                return;
+            }
+        }
 
         setOrderId(newOrderId);
         setStep("success");
@@ -109,6 +181,32 @@ export default function CheckoutPage() {
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
               Thank you for your order. We have sent a confirmation email to your inbox. Your Order ID is <span className="font-bold text-gray-900">#{orderId}</span>.
             </p>
+
+            {createdAccount && (
+                <div className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-xl text-left">
+                    <h3 className="font-bold text-blue-900 mb-2 flex items-center">
+                        <Shield className="w-4 h-4 mr-2" />
+                        Account Created Automatically
+                    </h3>
+                    <p className="text-sm text-blue-800 mb-4">
+                        We've created an account for you to track your order. You have been logged in automatically.
+                    </p>
+                    <div className="bg-white p-3 rounded-lg border border-blue-100 font-mono text-sm">
+                        <div className="flex justify-between mb-1">
+                            <span className="text-gray-500">Email:</span>
+                            <span className="font-bold text-gray-900">{createdAccount.email}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-500">Password:</span>
+                            <span className="font-bold text-primary">{createdAccount.password}</span>
+                        </div>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-2 italic">
+                        Please save these credentials or change your password in your account settings.
+                    </p>
+                </div>
+            )}
+
             <Link 
               href="/"
               className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-bold uppercase tracking-wider shadow-lg shadow-primary/20 hover:bg-orange-600 transition-colors"

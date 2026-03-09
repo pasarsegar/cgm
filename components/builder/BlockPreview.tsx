@@ -181,12 +181,21 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
                 </div>
             </div>
         );
-    case 'latest-products':
+    case 'latest-products': {
+        const count = block.content.count || 3;
+        let columns = 3;
+        if (count === 2) columns = 2;
+        if (count === 4 || count === 8 || count === 12) columns = 4;
+        
         return (
             <div className="p-6 border border-gray-200 rounded-lg bg-white">
                 <h3 className="text-xl font-bold mb-4 text-center">{block.content.title || "Latest Products"}</h3>
-                <div className="grid grid-cols-3 gap-4 opacity-50">
-                    {[...Array(3)].map((_, i) => (
+                <div className={`grid gap-4 opacity-50 ${
+                    columns === 2 ? 'grid-cols-2' : 
+                    columns === 4 ? 'grid-cols-4' : 
+                    'grid-cols-3'
+                }`}>
+                    {[...Array(Math.min(count, 4))].map((_, i) => (
                         <div key={i} className="border rounded p-4">
                             <div className="bg-gray-200 h-32 w-full mb-2 rounded flex items-center justify-center">
                                 <Package className="text-gray-400 w-8 h-8" />
@@ -201,6 +210,7 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
                 </div>
             </div>
         );
+    }
     default:
       return <div className="p-4 text-red-500 bg-red-50 rounded">Unknown Block Type: {block.type}</div>;
   }

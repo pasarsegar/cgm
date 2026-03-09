@@ -52,6 +52,6 @@ export const initialBlockContent: Record<BlockType, any> = {
   },
   'latest-products': {
     title: "Latest Tuning Parts",
-    count: 6
+    count: 3
   }
 };

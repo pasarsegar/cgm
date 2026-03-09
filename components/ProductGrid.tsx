@@ -9,11 +9,23 @@ import { Product, Variation } from "@/lib/types";
 interface ProductGridProps {
   products: Product[];
   title?: string;
+  columns?: number;
 }
 
-export default function ProductGrid({ products, title = "Latest Products" }: ProductGridProps) {
+export default function ProductGrid({ products, title = "Latest Products", columns = 3 }: ProductGridProps) {
   const { formatPrice, currency, loading } = useCurrency();
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const getGridClass = () => {
+    switch (columns) {
+      case 2:
+        return "grid grid-cols-1 md:grid-cols-2 gap-8";
+      case 4:
+        return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8";
+      default:
+        return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8";
+    }
+  };
 
   const getPriceDisplay = (product: Product) => {
     if (product.type === "variable" && product.variations && product.variations.length > 0) {
@@ -47,7 +59,7 @@ export default function ProductGrid({ products, title = "Latest Products" }: Pro
     <section className="py-16 bg-background-shade">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold mb-8 text-center text-text">{title}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className={getGridClass()}>
           {products.map((product) => (
             <div key={product.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-gray-100">
               <div className="h-64 bg-gray-100 flex items-center justify-center relative overflow-hidden">

@@ -71,6 +71,19 @@ export default function BuilderEditor({ initialContent, onChange }: BuilderEdito
     setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
   };
 
+  const duplicateBlock = (block: BuilderBlock) => {
+    const newBlock = {
+      ...block,
+      id: crypto.randomUUID(),
+      content: JSON.parse(JSON.stringify(block.content))
+    };
+    
+    const index = blocks.findIndex(b => b.id === block.id);
+    const newBlocks = [...blocks];
+    newBlocks.splice(index + 1, 0, newBlock);
+    setBlocks(newBlocks);
+  };
+
   const deleteBlock = (id: string) => {
     setBlocks(blocks.filter(b => b.id !== id));
   };
@@ -109,8 +122,9 @@ export default function BuilderEditor({ initialContent, onChange }: BuilderEdito
                     <SortableBlock 
                         key={block.id} 
                         block={block} 
-                        onDelete={deleteBlock}
-                        onUpdate={updateBlock}
+                        onDelete={() => deleteBlock(block.id)}
+                        onUpdate={(id, content) => updateBlock(id, content)}
+                        onDuplicate={() => duplicateBlock(block)}
                     />
                 ))}
             </div>

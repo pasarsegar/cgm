@@ -44,7 +44,10 @@ export default function AdminSlider() {
       description: "",
       image: "",
       buttonText: "Shop Now",
-      buttonLink: "/shop"
+      buttonLink: "/shop",
+      buttonPosition: "left",
+      secondButtonText: "Learn More",
+      secondButtonLink: "/about-us"
     });
   };
 
@@ -192,6 +195,40 @@ export default function AdminSlider() {
                     value={editForm.buttonLink}
                     onChange={(e) => setEditForm({ ...editForm, buttonLink: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Button Position</label>
+                <select 
+                  value={editForm.buttonPosition || 'left'}
+                  onChange={(e) => setEditForm({ ...editForm, buttonPosition: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                >
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Second Button Text (Optional)</label>
+                  <input 
+                    value={editForm.secondButtonText || ''}
+                    onChange={(e) => setEditForm({ ...editForm, secondButtonText: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                    placeholder="e.g. Learn More"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Second Button Link</label>
+                  <input 
+                    value={editForm.secondButtonLink || ''}
+                    onChange={(e) => setEditForm({ ...editForm, secondButtonLink: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                    placeholder="e.g. /about-us"
                   />
                 </div>
               </div>

@@ -51,12 +51,13 @@ export default async function Home() {
                 </div>
             )
         ) : (
-            <RevSlider />
+            <>
+                <RevSlider />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                  <ProductGrid products={products} title="Latest Tuning Parts" />
+                </div>
+            </>
         )}
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <ProductGrid products={products} title="Latest Tuning Parts" />
-        </div>
       </div>
       <Footer />
     </main>

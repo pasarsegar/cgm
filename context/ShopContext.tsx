@@ -12,6 +12,9 @@ export interface Slide {
   image: string;
   buttonText: string;
   buttonLink: string;
+  buttonPosition?: 'left' | 'center' | 'right';
+  secondButtonText?: string;
+  secondButtonLink?: string;
 }
 
 export interface HeaderSettings {

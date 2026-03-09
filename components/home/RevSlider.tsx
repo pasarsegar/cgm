@@ -44,10 +44,18 @@ export default function RevSlider() {
           </div>
 
           {/* Content */}
-          <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-start text-white">
+          <div className={cn(
+            "relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center text-white",
+            slide.buttonPosition === 'center' ? 'items-center text-center' :
+            slide.buttonPosition === 'right' ? 'items-end text-right' :
+            'items-start text-left'
+          )}>
             <div className={cn(
               "space-y-6 max-w-2xl transform transition-all duration-700 delay-300",
-              index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+              index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
+              slide.buttonPosition === 'center' ? 'flex flex-col items-center' :
+              slide.buttonPosition === 'right' ? 'flex flex-col items-end' :
+              ''
             )}>
               <span className="text-primary font-black text-xs uppercase tracking-[0.3em]">
                 {slide.subtitle}
@@ -66,9 +74,11 @@ export default function RevSlider() {
                   {slide.buttonText}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </a>
-                <a href="/tuning" className="text-white text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1">
-                  Learn More
-                </a>
+                {slide.secondButtonText && (
+                  <a href={slide.secondButtonLink || '#'} className="text-white text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1">
+                    {slide.secondButtonText}
+                  </a>
+                )}
               </div>
             </div>
           </div>

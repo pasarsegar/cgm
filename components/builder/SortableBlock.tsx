@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BuilderBlock, initialBlockContent, BlockType } from './types';
-import { GripVertical, Trash2, ChevronDown, ChevronUp, Edit3, Eye, ShoppingBag } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Edit3, Eye, ShoppingBag, Copy } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import BlockPreview from './BlockPreview';
 import { supabase } from '@/lib/supabase';
@@ -12,9 +12,10 @@ interface SortableBlockProps {
   block: BuilderBlock;
   onDelete: (id: string) => void;
   onUpdate: (id: string, content: any) => void;
+  onDuplicate?: (block: BuilderBlock) => void;
 }
 
-export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlockProps) {
+export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }: SortableBlockProps) {
   const {
     attributes,
     listeners,
@@ -43,6 +44,7 @@ export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlo
   const renderEditor = () => {
     switch (block.type) {
       case 'hero':
+        // No duplication logic needed here for now
         return (
           <div className="space-y-3">
             <input 
@@ -195,8 +197,43 @@ export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlo
              ));
         };
 
-        return (
-            <div className="space-y-4">
+        const duplicateBlock = (colIndex: number, blockId: string) => {
+    const currentBlocks = columns[colIndex] || [];
+    const blockToDuplicate = currentBlocks.find((b: BuilderBlock) => b.id === blockId);
+    if (!blockToDuplicate) return;
+
+    const newBlock = {
+      ...blockToDuplicate,
+      id: crypto.randomUUID(),
+      content: JSON.parse(JSON.stringify(blockToDuplicate.content))
+    };
+
+    const blockIndex = currentBlocks.findIndex((b: BuilderBlock) => b.id === blockId);
+    const newBlocks = [...currentBlocks];
+    newBlocks.splice(blockIndex + 1, 0, newBlock);
+    
+    updateColumn(colIndex, newBlocks);
+  };
+
+  const duplicateContainerChildBlock = (childId: string) => {
+    const blockToDuplicate = (block.content.children || []).find((b: BuilderBlock) => b.id === childId);
+    if (!blockToDuplicate) return;
+
+    const newBlock = {
+      ...blockToDuplicate,
+      id: crypto.randomUUID(),
+      content: JSON.parse(JSON.stringify(blockToDuplicate.content)) // Deep copy content
+    };
+
+    const blockIndex = (block.content.children || []).findIndex((b: BuilderBlock) => b.id === childId);
+    const newChildren = [...(block.content.children || [])];
+    newChildren.splice(blockIndex + 1, 0, newBlock);
+    
+    updateChildren(newChildren);
+  };
+
+  return (
+      <div className="space-y-4">
                 <div className="bg-gray-100 p-3 rounded-lg space-y-3">
                     <h4 className="text-xs font-bold uppercase text-gray-500">Container Settings</h4>
                     
@@ -262,6 +299,13 @@ export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlo
                             <div key={child.id} className="bg-white border border-gray-200 rounded p-3 relative group">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="font-bold text-xs uppercase text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{child.type}</span>
+                                    <button 
+                                        onClick={() => duplicateContainerChildBlock(child.id)}
+                                        className="text-gray-400 hover:text-blue-600 p-1 hover:bg-blue-50 rounded"
+                                        title="Duplicate Widget"
+                                    >
+                                        <Copy className="w-3 h-3" />
+                                    </button>
                                     <button 
                                         onClick={() => removeChildBlock(child.id)}
                                         className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded"
@@ -484,12 +528,22 @@ export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlo
                                         <div key={subBlock.id} className="bg-white border border-gray-200 rounded p-2 text-sm relative group">
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="font-bold text-xs uppercase text-gray-600">{subBlock.type}</span>
-                                                <button 
-                                                    onClick={() => removeBlockFromColumn(colIndex, subBlock.id)}
-                                                    className="text-red-400 hover:text-red-600"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
+                                                <div className="flex items-center space-x-1">
+                                                    <button 
+                                                        onClick={() => duplicateBlock(colIndex, subBlock.id)}
+                                                        className="text-gray-400 hover:text-blue-600 p-1 hover:bg-blue-50 rounded"
+                                                        title="Duplicate Block"
+                                                    >
+                                                        <Copy className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => removeBlockFromColumn(colIndex, subBlock.id)}
+                                                        className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded"
+                                                        title="Remove Block"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
                                             </div>
                                             {/* Simple inline editor for nested blocks */}
                                             {subBlock.type === 'text' && (
@@ -597,12 +651,18 @@ export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlo
                 />
                 <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600">Product Count:</span>
-                    <input 
-                        type="number" 
+                    <select 
                         className="w-24 p-2 border rounded"
                         value={block.content.count}
                         onChange={(e) => onUpdate(block.id, { ...block.content, count: parseInt(e.target.value) })}
-                    />
+                    >
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                        <option value={6}>6</option>
+                        <option value={8}>8</option>
+                        <option value={12}>12</option>
+                    </select>
                 </div>
                 <div className="bg-gray-50 p-3 rounded text-sm text-gray-500">
                     Displays a grid of latest products dynamically.
@@ -624,6 +684,15 @@ export default function SortableBlock({ block, onDelete, onUpdate }: SortableBlo
             <span className="font-bold text-sm uppercase text-gray-600">{block.type.replace('-', ' ')}</span>
         </div>
         <div className="flex items-center space-x-2">
+            {onDuplicate && (
+                <button 
+                    onClick={() => onDuplicate(block)} 
+                    className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                    title="Duplicate Block"
+                >
+                    <Copy className="w-4 h-4" />
+                </button>
+            )}
             <button 
                 onClick={() => setIsEditing(!isEditing)} 
                 className={`flex items-center px-3 py-1 text-xs font-medium rounded border transition-colors ${isEditing ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}

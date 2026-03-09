@@ -1,5 +1,3 @@
-"use client";
-
 import { BuilderBlock } from './types';
 import parse from 'html-react-parser';
 import Link from 'next/link';
@@ -242,15 +240,22 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
                 </div>
             </div>
         );
-    case 'latest-products':
+    case 'latest-products': {
+        const count = block.content.count || 3;
+        let columns = 3;
+        if (count === 2) columns = 2;
+        if (count === 4 || count === 8 || count === 12) columns = 4;
+        
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <ProductGrid 
                     products={block.data || []} 
                     title={block.content.title || "Latest Products"} 
+                    columns={columns}
                 />
             </div>
         );
+    }
     case 'product':
         const product = block.data;
         if (!product) return null;

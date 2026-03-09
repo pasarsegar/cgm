@@ -7,6 +7,7 @@ import {
   Search, 
   Edit2, 
   Trash2, 
+  Copy,
   Loader2,
   Image as ImageIcon,
   FolderTree
@@ -58,6 +59,81 @@ export default function AdminProducts() {
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.categories?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDuplicate = async (product: any) => {
+    if (!confirm(`Duplicate "${product.name}"?`)) return;
+    setLoading(true);
+
+    try {
+      // 1. Fetch full product details
+      const { data: fullProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('*, product_variations(*)')
+        .eq('id', product.id)
+        .single();
+
+      if (fetchError || !fullProduct) throw new Error("Failed to fetch original product");
+
+      // 2. Prepare new product data
+      // Remove system fields and relations
+      const { id, created_at, product_variations, categories, ...productData } = fullProduct;
+      
+      // We explicitly construct the payload to avoid sending extra fields (like 'slug' if it doesn't exist in DB)
+      // and to ensure we send all required fields.
+      const newProductData: any = {
+        name: `${productData.name} (Copy)`,
+        price: productData.price,
+        image: productData.image,
+        gallery: productData.gallery || [], // Ensure gallery is included (it's text[] in DB)
+        description: productData.description,
+        category_id: productData.category_id,
+        sub_category_id: productData.sub_category_id,
+        rating: productData.rating || 0,
+        type: productData.type
+      };
+
+      // Remove undefined values
+      Object.keys(newProductData).forEach(key => newProductData[key] === undefined && delete newProductData[key]);
+
+      // 3. Insert new product
+      const { data: newProduct, error: insertError } = await supabase
+        .from('products')
+        .insert({
+            ...newProductData,
+            id: crypto.randomUUID()
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 4. Duplicate variations if they exist
+      if (product_variations && product_variations.length > 0) {
+        const newVariations = product_variations.map((v: any) => {
+          // Remove system fields from variation
+          const { id, product_id, created_at, ...variationData } = v;
+          return {
+            ...variationData,
+            id: crypto.randomUUID(),
+            product_id: newProduct.id
+          };
+        });
+
+        const { error: variationsError } = await supabase
+          .from('product_variations')
+          .insert(newVariations);
+
+        if (variationsError) console.error("Error duplicating variations:", variationsError);
+      }
+
+      await fetchData();
+
+    } catch (error: any) {
+      alert('Error duplicating product: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
@@ -248,6 +324,13 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-6 py-4 text-right">
                     <div className="flex justify-end space-x-2">
+                        <button 
+                        onClick={() => handleDuplicate(product)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Duplicate Product"
+                        >
+                        <Copy className="w-4 h-4" />
+                        </button>
                         <button 
                         onClick={() => handleEdit(product)}
                         className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"

@@ -9,6 +9,8 @@ import { useShop } from "@/context/ShopContext";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useCurrency } from "@/context/CurrencyContext";
+import BuilderRendererLite from "@/components/builder/BuilderRendererLite";
+import parse from "html-react-parser";
 
 interface MenuItem {
   id: string;
@@ -17,6 +19,21 @@ interface MenuItem {
   url?: string;
   children?: MenuItem[];
 }
+
+type WidgetType = "search" | "recent_posts" | "categories" | "custom_html" | "text" | "image";
+type HeaderWidget = {
+  id: string;
+  type: WidgetType;
+  title: string;
+  settings: Record<string, any>;
+};
+
+type HeaderBarSettings = {
+  backgroundColor: string;
+  textColor: string;
+  message: string;
+  messageAlign: "left" | "center" | "right";
+};
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,9 +46,22 @@ export default function Header() {
   
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [headerTopContent, setHeaderTopContent] = useState<string>("");
+  const [headerTopWidgets, setHeaderTopWidgets] = useState<HeaderWidget[]>([]);
+  const [secondaryMenuItems, setSecondaryMenuItems] = useState<MenuItem[]>([]);
+  const [headerBarSettings, setHeaderBarSettings] = useState<HeaderBarSettings>({
+    backgroundColor: "#1d2327",
+    textColor: "#ffffff",
+    message: "",
+    messageAlign: "center",
+  });
 
   useEffect(() => {
     fetchMenu();
+    fetchHeaderTop();
+    fetchHeaderTopWidgets();
+    fetchSecondaryMenu();
+    fetchHeaderBarSettings();
   }, []);
 
   const fetchMenu = async () => {
@@ -56,6 +86,113 @@ export default function Header() {
     setLoading(false);
   };
 
+  const fetchSecondaryMenu = async () => {
+    const { data: menu } = await supabase
+      .from("menus")
+      .select("items")
+      .eq("location", "header-secondary")
+      .maybeSingle();
+
+    if (menu && (menu as any).items) {
+      setSecondaryMenuItems((menu as any).items);
+    } else {
+      setSecondaryMenuItems([]);
+    }
+  };
+
+  const fetchHeaderBarSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "header_bar_settings")
+        .maybeSingle();
+
+      if (data?.value) {
+        const parsed = JSON.parse(data.value);
+        setHeaderBarSettings((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const fetchHeaderTop = async () => {
+    const readLocal = () => {
+      try {
+        const raw = localStorage.getItem("local_pages_v1");
+        if (!raw) return "";
+        const pages = JSON.parse(raw);
+        if (!Array.isArray(pages)) return "";
+        const page = pages.find((p: any) => p?.slug === "site-header" && p?.status === "publish");
+        return page?.content || "";
+      } catch {
+        return "";
+      }
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from("pages")
+        .select("content")
+        .eq("slug", "site-header")
+        .eq("status", "publish")
+        .limit(1);
+
+      if (error) {
+        setHeaderTopContent(readLocal());
+        return;
+      }
+      const content = (data && (data as any[])[0]?.content) || "";
+      setHeaderTopContent(content);
+    } catch {
+      setHeaderTopContent(readLocal());
+    }
+  };
+
+  const fetchHeaderTopWidgets = async () => {
+    const readLocal = (): HeaderWidget[] => {
+      try {
+        const raw = localStorage.getItem("local_widget_areas_v1");
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        const area = parsed.find((a: any) => a?.id === "header-top");
+        const widgets = (area?.widgets || []) as any[];
+        return widgets.map((w) => ({
+          id: w.id,
+          type: w.type,
+          title: w.title,
+          settings: w.settings || {},
+        }));
+      } catch {
+        return [];
+      }
+    };
+
+    const local = readLocal();
+    if (local.length > 0) setHeaderTopWidgets(local);
+
+    try {
+      const { data: widgets, error } = await supabase
+        .from("widgets")
+        .select("*")
+        .eq("area_id", "header-top")
+        .order("order");
+
+      if (error) throw error;
+      const normalized = (widgets || []).map((w: any) => ({
+        id: w.id,
+        type: w.type,
+        title: w.title,
+        settings: w.settings || {},
+      }));
+      setHeaderTopWidgets(normalized);
+    } catch {
+      // keep local
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -73,9 +210,67 @@ export default function Header() {
       }}
     >
       {/* Top Bar (Optional) */}
-      <div className="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] text-center uppercase tracking-widest font-bold">
-        Free Shipping on all Tuning Parts over $500
-      </div>
+      {headerTopContent ? (
+        headerTopContent.trim().startsWith("[") ? (
+          <BuilderRendererLite content={headerTopContent} />
+        ) : (
+          <>{parse(headerTopContent)}</>
+        )
+      ) : headerTopWidgets.length > 0 ? (
+        <div className="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] uppercase tracking-widest font-bold">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
+            {headerTopWidgets.map((widget) => (
+              <div key={widget.id} className="flex items-center gap-2">
+                {widget.type === "text" || widget.type === "custom_html" ? (
+                  <span className="font-bold">{parse(widget.settings.text || "")}</span>
+                ) : widget.type === "image" ? (
+                  widget.settings.url ? (
+                    widget.settings.link ? (
+                      <a href={widget.settings.link} className="inline-flex items-center">
+                        <img
+                          src={widget.settings.url}
+                          alt={widget.settings.alt || ""}
+                          className="h-5 w-auto"
+                        />
+                      </a>
+                    ) : (
+                      <img
+                        src={widget.settings.url}
+                        alt={widget.settings.alt || ""}
+                        className="h-5 w-auto"
+                      />
+                    )
+                  ) : null
+                ) : widget.type === "search" ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.currentTarget as HTMLFormElement;
+                      const input = form.elements.namedItem("q") as HTMLInputElement | null;
+                      const q = input?.value || "";
+                      if (q.trim()) router.push(`/search?q=${encodeURIComponent(q)}`);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      name="q"
+                      placeholder="Search..."
+                      className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[11px] outline-none placeholder:text-white/70"
+                    />
+                    <button type="submit" className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[11px]">
+                      Go
+                    </button>
+                  </form>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] text-center uppercase tracking-widest font-bold">
+          Free Shipping on all Tuning Parts over $500
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className={cn(
@@ -90,7 +285,7 @@ export default function Header() {
           )}>
             <Link href="/" className="flex items-center">
                 {headerSettings.logoUrl ? (
-                    <img src={headerSettings.logoUrl} alt="LCP Auto Cars" style={{ height: headerSettings.logoHeight || '40px' }} />
+                    <img src={headerSettings.logoUrl} alt={siteName} style={{ height: headerSettings.logoHeight || '40px' }} />
                 ) : (
                     <span className="text-2xl font-black italic" style={{ color: headerSettings.textColor }}>
                     {siteName.split(' ')[0]}<span className="text-primary">{siteName.split(' ').slice(1).join('') || 'AUTO'}</span>
@@ -212,6 +407,50 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {(secondaryMenuItems.length > 0 || headerBarSettings.message) && (
+        <div
+          className="border-t border-black/10"
+          style={{ backgroundColor: headerBarSettings.backgroundColor, color: headerBarSettings.textColor }}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              {headerBarSettings.message ? (
+                <div
+                  className={cn(
+                    "text-xs font-bold uppercase tracking-widest",
+                    headerBarSettings.messageAlign === "left"
+                      ? "text-left"
+                      : headerBarSettings.messageAlign === "right"
+                        ? "text-right"
+                        : "text-center"
+                  )}
+                  style={{ color: headerBarSettings.textColor }}
+                >
+                  {headerBarSettings.message}
+                </div>
+              ) : (
+                <div />
+              )}
+
+              {secondaryMenuItems.length > 0 && (
+                <nav className="flex flex-wrap items-center justify-center md:justify-end gap-x-6 gap-y-2 text-xs font-bold uppercase tracking-widest">
+                  {secondaryMenuItems.map((item) => (
+                    <Link
+                      key={item.id || item.label}
+                      href={item.url || "#"}
+                      className="hover:opacity-80 transition-opacity"
+                      style={{ color: headerBarSettings.textColor }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Navigation */}
       {isMenuOpen && (

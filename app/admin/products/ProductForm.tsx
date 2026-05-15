@@ -27,7 +27,7 @@ const productSchema = z.object({
   variations: z.array(variationSchema).optional(),
 });
 
-type ProductFormData = z.infer<typeof productSchema>;
+type ProductFormData = z.input<typeof productSchema>;
 
 interface ProductFormProps {
   product?: Product | null;
@@ -146,11 +146,11 @@ export default function ProductForm({ product, categories, onClose, onSave }: Pr
       name: data.name,
       price: finalPrice,
       image: data.image,
-      gallery: data.gallery,
+      gallery: data.gallery || [],
       category_id: data.category_id,
       sub_category_id: data.sub_category_id,
       type: data.type,
-      rating: data.rating,
+      rating: data.rating ?? 0,
     };
 
     let productId = product?.id;

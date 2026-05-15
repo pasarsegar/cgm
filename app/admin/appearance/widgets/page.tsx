@@ -133,6 +133,40 @@ function SortableWidget({
               />
             </div>
           )}
+          {widget.type === 'image' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Image URL</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.url || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, url: e.target.value } })}
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Alt Text</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.alt || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, alt: e.target.value } })}
+                  placeholder="Describe the image"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Link URL (optional)</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.link || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, link: e.target.value } })}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between pt-3 border-t border-[#f0f0f1]">
             <button 
               onClick={removeWidget}
@@ -153,6 +187,38 @@ export default function AdminWidgets() {
   const [loading, setLoading] = useState(true);
   const [expandedWidgets, setExpandedWidgets] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+
+  const LOCAL_WIDGET_AREAS_KEY = "local_widget_areas_v1";
+
+  const getDefaultAreas = (): WidgetArea[] => ([
+    { id: 'main-sidebar', name: 'Main Sidebar', description: 'Appears on the right of blog posts.', widgets: [] },
+    { id: 'header-top', name: 'Header Top Bar', description: 'Appears above the main header navigation.', widgets: [] },
+    { id: 'footer-1', name: 'Footer Column 1', description: 'First column in the footer.', widgets: [] },
+    { id: 'footer-2', name: 'Footer Column 2', description: 'Second column in the footer.', widgets: [] },
+    { id: 'footer-3', name: 'Footer Column 3', description: 'Third column in the footer.', widgets: [] },
+    { id: 'footer-4', name: 'Footer Column 4', description: 'Fourth column in the footer.', widgets: [] },
+  ]);
+
+  const readLocalAreas = (): WidgetArea[] => {
+    try {
+      const raw = localStorage.getItem(LOCAL_WIDGET_AREAS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed;
+    } catch {
+      return [];
+    }
+  };
+
+  const persistLocalAreas = (areas: WidgetArea[]) => {
+    try {
+      localStorage.setItem(LOCAL_WIDGET_AREAS_KEY, JSON.stringify(areas));
+    } catch {
+      // ignore
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -178,42 +244,50 @@ export default function AdminWidgets() {
   const fetchWidgetAreas = async () => {
     setLoading(true);
     // Fetch areas
-    const { data: areas, error: areasError } = await supabase
+    let areas: any[] | null = null;
+    try {
+      const res = await supabase
         .from('widget_areas')
         .select('*')
         .order('name');
-
-    if (areasError) {
-        console.error('Error fetching widget areas:', areasError);
-        setLoading(false);
-        return;
+      areas = res.data as any[] | null;
+      if (res.error) {
+        throw res.error;
+      }
+      setOfflineMode(false);
+    } catch (err) {
+      console.error('Error fetching widget areas:', err);
+      setOfflineMode(true);
+      const local = readLocalAreas();
+      setWidgetAreas(local.length > 0 ? local : getDefaultAreas());
+      setLoading(false);
+      return;
     }
 
     // Fetch widgets for all areas
-    const { data: widgets, error: widgetsError } = await supabase
+    let widgets: any[] | null = null;
+    try {
+      const res = await supabase
         .from('widgets')
         .select('*')
         .order('order');
-
-    if (widgetsError) {
-        console.error('Error fetching widgets:', widgetsError);
+      widgets = res.data as any[] | null;
+      if (res.error) {
+        console.error('Error fetching widgets:', res.error);
+      }
+    } catch (err) {
+      console.error('Error fetching widgets:', err);
     }
 
     // Combine
-    const fullAreas = areas.map(area => ({
+    const fullAreas = (areas || []).map(area => ({
         ...area,
         widgets: widgets?.filter(w => w.area_id === area.id) || []
     }));
 
     // If no areas exist, create defaults (for first run)
     if (fullAreas.length === 0) {
-        const defaults = [
-            { id: 'main-sidebar', name: 'Main Sidebar', description: 'Appears on the right of blog posts.' },
-            { id: 'footer-1', name: 'Footer Column 1', description: 'First column in the footer.' },
-            { id: 'footer-2', name: 'Footer Column 2', description: 'Second column in the footer.' },
-            { id: 'footer-3', name: 'Footer Column 3', description: 'Third column in the footer.' },
-            { id: 'footer-4', name: 'Footer Column 4', description: 'Fourth column in the footer.' },
-        ];
+        const defaults = getDefaultAreas().map(({ widgets: _w, ...rest }) => rest);
         
         // Insert defaults
         for (const def of defaults) {
@@ -226,6 +300,7 @@ export default function AdminWidgets() {
     }
 
     setWidgetAreas(fullAreas);
+    persistLocalAreas(fullAreas);
     setLoading(false);
   };
 
@@ -237,15 +312,19 @@ export default function AdminWidgets() {
 
   const removeWidget = async (areaId: string, widgetId: string) => {
     // Optimistic update
-    setWidgetAreas(areas => areas.map(area => {
+    const nextAreas = widgetAreas.map(area => {
       if (area.id === areaId) {
         return { ...area, widgets: area.widgets.filter(w => w.id !== widgetId) };
       }
       return area;
-    }));
+    });
+    setWidgetAreas(nextAreas);
+    persistLocalAreas(nextAreas);
 
     // DB update
-    await supabase.from('widgets').delete().eq('id', widgetId);
+    if (!offlineMode) {
+      await supabase.from('widgets').delete().eq('id', widgetId);
+    }
   };
 
   const addWidget = async (areaId: string, type: Widget['type']) => {
@@ -262,22 +341,26 @@ export default function AdminWidgets() {
     };
     
     // Optimistic update
-    setWidgetAreas(areas => areas.map(a => {
+    const nextAreas = widgetAreas.map(a => {
       if (a.id === areaId) {
         return { ...a, widgets: [...a.widgets, newWidget] };
       }
       return a;
-    }));
+    });
+    setWidgetAreas(nextAreas);
+    persistLocalAreas(nextAreas);
     toggleWidget(newWidget.id);
 
     // DB Insert
-    const { error } = await supabase.from('widgets').insert(newWidget);
-    if (error) console.error('Error adding widget:', error);
+    if (!offlineMode) {
+      const { error } = await supabase.from('widgets').insert(newWidget);
+      if (error) console.error('Error adding widget:', error);
+    }
   };
 
   const updateWidget = async (areaId: string, widgetId: string, updated: Partial<Widget>) => {
     // Optimistic update
-    setWidgetAreas(areas => areas.map(area => {
+    const nextAreas = widgetAreas.map(area => {
       if (area.id === areaId) {
         return { 
             ...area, 
@@ -285,7 +368,9 @@ export default function AdminWidgets() {
         };
       }
       return area;
-    }));
+    });
+    setWidgetAreas(nextAreas);
+    persistLocalAreas(nextAreas);
 
     // Debounced DB update could go here, but for now we'll rely on the "Save" button for major edits
     // or direct updates for small things if needed. 
@@ -294,6 +379,10 @@ export default function AdminWidgets() {
   };
 
   const saveWidgetToDB = async (widget: Widget) => {
+      if (offlineMode) {
+        toggleWidget(widget.id);
+        return;
+      }
       setSaving(true);
       const { error } = await supabase
         .from('widgets')
@@ -335,9 +424,11 @@ export default function AdminWidgets() {
             const newWidgets = arrayMove(sourceArea.widgets, oldIndex, newIndex);
             
             // Optimistic update
-            setWidgetAreas(areas => areas.map(a => 
+            const nextAreas = widgetAreas.map(a => 
                 a.id === sourceArea.id ? { ...a, widgets: newWidgets } : a
-            ));
+            );
+            setWidgetAreas(nextAreas);
+            persistLocalAreas(nextAreas);
 
             // DB Update orders
             const updates = newWidgets.map((w, index) => ({
@@ -346,7 +437,9 @@ export default function AdminWidgets() {
                 area_id: sourceArea.id // Ensure area_id is set
             }));
 
-            await supabase.from('widgets').upsert(updates);
+            if (!offlineMode) {
+              await supabase.from('widgets').upsert(updates);
+            }
         }
     } else {
         // Moving between areas - more complex, for now let's stick to same-area sorting
@@ -357,6 +450,11 @@ export default function AdminWidgets() {
 
   return (
     <div className="space-y-6">
+      {offlineMode && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 px-4 py-3 rounded text-sm">
+          Supabase is not reachable. Widgets are running in local mode (saved in this browser only).
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Column: Available Widgets */}
         <div className="w-full md:w-1/3 space-y-4">

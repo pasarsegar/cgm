@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 // Initialize Stripe (simulated with placeholder key)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
-  apiVersion: "2025-02-24-preview",
+  apiVersion: "2026-02-25.clover",
 });
 
 export async function createPaymentSession(amount: number, currency: "USD" | "IDR" = "USD") {
@@ -18,7 +18,7 @@ export async function createPaymentSession(amount: number, currency: "USD" | "ID
           price_data: {
             currency: currency.toLowerCase(),
             product_data: {
-              name: "LCP Auto Cars Order",
+              name: "Mythoz Order",
             },
             unit_amount: Math.round(amount * 100), // convert to cents
           },

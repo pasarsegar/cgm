@@ -203,6 +203,17 @@ export default function AdminMenus() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [headerBarSettings, setHeaderBarSettings] = useState<{
+    backgroundColor: string;
+    textColor: string;
+    message: string;
+    messageAlign: "left" | "center" | "right";
+  }>({
+    backgroundColor: "#1d2327",
+    textColor: "#ffffff",
+    message: "",
+    messageAlign: "center",
+  });
 
   // Data for sidebar
   const [availablePages, setAvailablePages] = useState<Page[]>([]);
@@ -247,6 +258,24 @@ export default function AdminMenus() {
 
     const { data: categories } = await supabase.from('categories').select('id, name, slug');
     if (categories) setAvailableCategories(categories);
+
+    const { data: headerBar } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "header_bar_settings")
+      .maybeSingle();
+
+    if (headerBar?.value) {
+      try {
+        const parsed = JSON.parse(headerBar.value);
+        setHeaderBarSettings((prev) => ({
+          ...prev,
+          ...parsed,
+        }));
+      } catch {
+        // ignore
+      }
+    }
   };
 
   const fetchMenu = async (location: string) => {
@@ -261,7 +290,13 @@ export default function AdminMenus() {
       setMenuName(menu.name);
       setMenuItems(ensureIds(menu.items || []));
     } else {
-      setMenuName(location === 'header' ? 'Primary Menu' : 'Footer Menu');
+      setMenuName(
+        location === "header"
+          ? "Primary Menu"
+          : location === "header-secondary"
+            ? "Header Bar Menu"
+            : "Footer Menu"
+      );
       setMenuItems([]);
     }
     setLoading(false);
@@ -288,6 +323,21 @@ export default function AdminMenus() {
     const { error } = await supabase
       .from('menus')
       .upsert(payload, { onConflict: 'location' });
+
+    if (!error && activeMenuLocation === "header-secondary") {
+      const { error: settingsError } = await supabase.from("settings").upsert({
+        key: "header_bar_settings",
+        value: JSON.stringify(headerBarSettings),
+        description: "Header bar (under header) styling and message",
+      });
+
+      if (settingsError) {
+        console.error("Save header bar settings error:", settingsError);
+        alert("Menu saved, but failed to save header bar settings: " + settingsError.message);
+        setSaving(false);
+        return;
+      }
+    }
 
     setSaving(false);
     
@@ -414,6 +464,7 @@ export default function AdminMenus() {
             onChange={(e) => setActiveMenuLocation(e.target.value)}
           >
             <option value="header">Primary Menu (Header)</option>
+            <option value="header-secondary">Header Bar Menu (Under Header)</option>
             <option value="footer">Footer Menu</option>
           </select>
         </div>
@@ -543,6 +594,58 @@ export default function AdminMenus() {
                   value={menuName}
                   onChange={(e) => setMenuName(e.target.value)}
                 />
+                {activeMenuLocation === "header-secondary" && (
+                  <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Bar Background</label>
+                      <input
+                        type="color"
+                        className="w-12 h-10 border border-gray-200 bg-white rounded"
+                        value={headerBarSettings.backgroundColor}
+                        onChange={(e) =>
+                          setHeaderBarSettings((prev) => ({ ...prev, backgroundColor: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Bar Text Color</label>
+                      <input
+                        type="color"
+                        className="w-12 h-10 border border-gray-200 bg-white rounded"
+                        value={headerBarSettings.textColor}
+                        onChange={(e) =>
+                          setHeaderBarSettings((prev) => ({ ...prev, textColor: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Message (optional)</label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-200 px-3 py-2 text-sm rounded focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
+                        value={headerBarSettings.message}
+                        onChange={(e) =>
+                          setHeaderBarSettings((prev) => ({ ...prev, message: e.target.value }))
+                        }
+                        placeholder="e.g. Free shipping over $500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Message Align</label>
+                      <select
+                        className="w-full border border-gray-200 px-3 py-2 text-sm rounded focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white"
+                        value={headerBarSettings.messageAlign}
+                        onChange={(e) =>
+                          setHeaderBarSettings((prev) => ({ ...prev, messageAlign: e.target.value as any }))
+                        }
+                      >
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-gray-400 mt-4 italic flex items-center gap-2">
                     <MousePointer2 className="w-3 h-3" />
                     Drag items to reorder. Click the arrow to edit details.

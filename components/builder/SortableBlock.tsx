@@ -72,12 +72,23 @@ export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }
         );
       case 'text':
         return (
-          <textarea 
-            className="w-full p-2 border rounded h-32"
-            value={block.content.html}
-            onChange={(e) => onUpdate(block.id, { ...block.content, html: e.target.value })}
-            placeholder="Enter HTML content..."
-          />
+          <div className="space-y-2">
+            <textarea 
+              className="w-full p-2 border rounded h-32"
+              value={block.content.html}
+              onChange={(e) => onUpdate(block.id, { ...block.content, html: e.target.value })}
+              placeholder="Enter HTML content..."
+            />
+            <label className="flex items-center text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={Boolean(block.content.noContainer)}
+                onChange={(e) => onUpdate(block.id, { ...block.content, noContainer: e.target.checked })}
+                className="mr-2"
+              />
+              Full width (no container)
+            </label>
+          </div>
         );
       case 'image':
         return (

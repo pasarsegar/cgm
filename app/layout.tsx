@@ -1,12 +1,33 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import ThemeProvider from "@/components/ThemeProvider";
+import type { Metadata } from "next";
+import { supabase } from "@/lib/supabase";
 
-export const metadata: Metadata = {
-  title: "LCP Auto Cars",
-  description: "LCP Auto Cars - Auto Parts & Tuning",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const { data, error } = await supabase
+      .from("settings")
+      .select("key,value")
+      .in("key", ["site_title", "site_name", "site_tagline"]);
+
+    if (error) throw error;
+
+    const values = new Map((data || []).map((row) => [row.key, row.value]));
+    const title = values.get("site_title") || values.get("site_name") || "Mythoz";
+    const tagline = values.get("site_tagline") || "";
+
+    return {
+      title,
+      description: tagline ? `${title} - ${tagline}` : `${title}`,
+    };
+  } catch {
+    return {
+      title: "Mythoz",
+      description: "Mythoz",
+    };
+  }
+}
 
 export default function RootLayout({
   children,

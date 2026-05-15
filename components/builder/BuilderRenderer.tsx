@@ -171,11 +171,14 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
         </div>
       );
     case 'text':
+      if (block.content.noContainer) {
+        return <>{parse(block.content.html || '')}</>;
+      }
       return (
         <div className="container mx-auto px-4 py-8">
-            <div className="prose max-w-none text-gray-700 dark:text-gray-300">
-                {parse(block.content.html || '')}
-            </div>
+          <div className="prose max-w-none text-gray-700 dark:text-gray-300">
+            {parse(block.content.html || '')}
+          </div>
         </div>
       );
     case 'image':

@@ -32,7 +32,7 @@ export const categories: Category[] = [
 
 export const products: Product[] = [
   {
-    id: 1,
+    id: "1",
     name: "MHD FLASHER LICENCE",
     price: 617,
     image: "https://autoparts.mythoz.com/wp-content/uploads/2025/12/mhd.jpeg", 
@@ -44,15 +44,15 @@ export const products: Product[] = [
     subCategory: "flasher-license",
     type: "variable",
     variations: [
-      { id: 101, name: "S55", price: 617 },
-      { id: 102, name: "N55", price: 617 },
-      { id: 103, name: "B58", price: 617 },
-      { id: 104, name: "S58", price: 617 },
-      { id: 105, name: "S63TU", price: 910 },
+      { id: "101", name: "S55", price: 617 },
+      { id: "102", name: "N55", price: 617 },
+      { id: "103", name: "B58", price: 617 },
+      { id: "104", name: "S58", price: 617 },
+      { id: "105", name: "S63TU", price: 910 },
     ]
   },
   {
-    id: 2,
+    id: "2",
     name: "CUSTOM TUNING BMW",
     price: 200,
     image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1000&auto=format&fit=crop",
@@ -62,10 +62,10 @@ export const products: Product[] = [
     subCategory: "performance-mapping",
     type: "variable",
     variations: [
-      { id: 201, name: "B48 / B46", price: 200 },
-      { id: 202, name: "B58 Gen 1", price: 200 },
-      { id: 203, name: "B58 Gen 2", price: 200 },
-      { id: 204, name: "S58 CustomROM", price: 200 },
+      { id: "201", name: "B48 / B46", price: 200 },
+      { id: "202", name: "B58 Gen 1", price: 200 },
+      { id: "203", name: "B58 Gen 2", price: 200 },
+      { id: "204", name: "S58 CustomROM", price: 200 },
     ]
   }
 ];

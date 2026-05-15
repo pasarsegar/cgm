@@ -159,38 +159,100 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   const [themeSettings, setThemeSettingsState] = useState<ThemeSettings>(initialThemeSettings);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [offlineMode, setOfflineMode] = useState(false);
+
+  const readLocalJson = <T,>(key: string): T | null => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeLocalJson = (key: string, value: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     
     // Fetch Slider
-    const { data: sliderData } = await supabase
-      .from('sliders')
-      .select('*')
-      .eq('active', true)
-      .maybeSingle();
-    
-    if (sliderData) {
-      setSlidesState(sliderData.slides || []);
+    try {
+      const { data: sliderData, error: sliderError } = await supabase
+        .from('sliders')
+        .select('*')
+        .eq('active', true)
+        .maybeSingle();
+
+      if (sliderError) throw sliderError;
+
+      if (sliderData) {
+        const nextSlides = sliderData.slides || [];
+        setSlidesState(nextSlides);
+        writeLocalJson("shop_slides", nextSlides);
+      }
+      setOfflineMode(false);
+    } catch {
+      const localSlides = readLocalJson<Slide[]>("shop_slides");
+      if (localSlides) setSlidesState(localSlides);
+      setOfflineMode(true);
     }
 
     // Fetch Settings
-    const { data: settingsData } = await supabase.from('settings').select('*');
-    if (settingsData) {
-      const general = settingsData.find(s => s.key === 'general_settings')?.value;
-      if (general) setGeneralSettingsState(prev => ({ ...prev, ...JSON.parse(general) }));
+    try {
+      const { data: settingsData, error: settingsError } = await supabase.from('settings').select('*');
+      if (settingsError) throw settingsError;
 
-      const header = settingsData.find(s => s.key === 'header_settings')?.value;
-      if (header) setHeaderSettingsState(prev => ({ ...prev, ...JSON.parse(header) }));
+      if (settingsData) {
+        const general = settingsData.find((s: any) => s.key === 'general_settings')?.value;
+        if (general) {
+          const parsed = JSON.parse(general);
+          setGeneralSettingsState(prev => ({ ...prev, ...parsed }));
+          writeLocalJson("shop_general_settings", { ...initialGeneralSettings, ...parsed });
+        }
 
-      const payment = settingsData.find(s => s.key === 'payment_settings')?.value;
-      if (payment) {
-        console.log('Raw Payment Settings from DB:', payment);
-        setPaymentSettingsState(prev => ({ ...prev, ...JSON.parse(payment) }));
+        const header = settingsData.find((s: any) => s.key === 'header_settings')?.value;
+        if (header) {
+          const parsed = JSON.parse(header);
+          setHeaderSettingsState(prev => ({ ...prev, ...parsed }));
+          writeLocalJson("shop_header_settings", { ...initialHeaderSettings, ...parsed });
+        }
+
+        const payment = settingsData.find((s: any) => s.key === 'payment_settings')?.value;
+        if (payment) {
+          const parsed = JSON.parse(payment);
+          setPaymentSettingsState(prev => ({ ...prev, ...parsed }));
+          writeLocalJson("shop_payment_settings", { ...initialPaymentSettings, ...parsed });
+        }
+
+        const theme = settingsData.find((s: any) => s.key === 'theme_settings')?.value;
+        if (theme) {
+          const parsed = JSON.parse(theme);
+          setThemeSettingsState(prev => ({ ...prev, ...parsed }));
+          writeLocalJson("shop_theme_settings", { ...initialThemeSettings, ...parsed });
+        }
       }
+      setOfflineMode(false);
+    } catch {
+      const localGeneral = readLocalJson<GeneralSettings>("shop_general_settings");
+      if (localGeneral) setGeneralSettingsState(prev => ({ ...prev, ...localGeneral }));
 
-      const theme = settingsData.find(s => s.key === 'theme_settings')?.value;
-      if (theme) setThemeSettingsState(prev => ({ ...prev, ...JSON.parse(theme) }));
+      const localHeader = readLocalJson<HeaderSettings>("shop_header_settings");
+      if (localHeader) setHeaderSettingsState(prev => ({ ...prev, ...localHeader }));
+
+      const localPayment = readLocalJson<PaymentSettings>("shop_payment_settings");
+      if (localPayment) setPaymentSettingsState(prev => ({ ...prev, ...localPayment }));
+
+      const localTheme = readLocalJson<ThemeSettings>("shop_theme_settings");
+      if (localTheme) setThemeSettingsState(prev => ({ ...prev, ...localTheme }));
+
+      setOfflineMode(true);
     }
 
     // Cart stays in localStorage as it's client-side only usually
@@ -206,45 +268,75 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
 
   const setSlides = async (newSlides: Slide[]) => {
     setSlidesState(newSlides);
+    writeLocalJson("shop_slides", newSlides);
     // In a real CMS, we'd update the 'sliders' table
-    await supabase.from('sliders').upsert({
-        id: 'main-slider',
-        name: 'Main Slider',
-        slides: newSlides,
-        active: true
-    });
+    try {
+      await supabase.from('sliders').upsert({
+          id: 'main-slider',
+          name: 'Main Slider',
+          slides: newSlides,
+          active: true
+      });
+      setOfflineMode(false);
+    } catch {
+      setOfflineMode(true);
+    }
   };
 
   const setGeneralSettings = async (settings: GeneralSettings) => {
     setGeneralSettingsState(settings);
-    await supabase.from('settings').upsert({
-        key: 'general_settings',
-        value: JSON.stringify(settings)
-    });
+    writeLocalJson("shop_general_settings", settings);
+    try {
+      await supabase.from('settings').upsert({
+          key: 'general_settings',
+          value: JSON.stringify(settings)
+      });
+      setOfflineMode(false);
+    } catch {
+      setOfflineMode(true);
+    }
   };
 
   const setHeaderSettings = async (settings: HeaderSettings) => {
     setHeaderSettingsState(settings);
-    await supabase.from('settings').upsert({
-        key: 'header_settings',
-        value: JSON.stringify(settings)
-    });
+    writeLocalJson("shop_header_settings", settings);
+    try {
+      await supabase.from('settings').upsert({
+          key: 'header_settings',
+          value: JSON.stringify(settings)
+      });
+      setOfflineMode(false);
+    } catch {
+      setOfflineMode(true);
+    }
   };
 
   const setPaymentSettings = async (settings: PaymentSettings) => {
     setPaymentSettingsState(settings);
-    await supabase.from('settings').upsert({
-        key: 'payment_settings',
-        value: JSON.stringify(settings)
-    });
+    writeLocalJson("shop_payment_settings", settings);
+    try {
+      await supabase.from('settings').upsert({
+          key: 'payment_settings',
+          value: JSON.stringify(settings)
+      });
+      setOfflineMode(false);
+    } catch {
+      setOfflineMode(true);
+    }
   };
 
   const setThemeSettings = async (settings: ThemeSettings) => {
     setThemeSettingsState(settings);
-    await supabase.from('settings').upsert({
-        key: 'theme_settings',
-        value: JSON.stringify(settings)
-    });
+    writeLocalJson("shop_theme_settings", settings);
+    try {
+      await supabase.from('settings').upsert({
+          key: 'theme_settings',
+          value: JSON.stringify(settings)
+      });
+      setOfflineMode(false);
+    } catch {
+      setOfflineMode(true);
+    }
   };
 
   const saveCart = (newCart: CartItem[]) => {

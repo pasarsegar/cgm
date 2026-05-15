@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
@@ -59,14 +58,15 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminOrders() {
-  const searchParams = useSearchParams();
-  const action = searchParams.get("action");
+  const [action, setAction] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setAction(params.get("action"));
     fetchOrders();
   }, []);
 

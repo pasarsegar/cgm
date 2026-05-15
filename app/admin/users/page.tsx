@@ -1,7 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Search, 
   User, 
@@ -33,10 +32,14 @@ const sampleUsers: AdminUser[] = [
 ];
 
 export default function AdminUsers() {
-  const searchParams = useSearchParams();
-  const action = searchParams.get("action");
+  const [action, setAction] = useState<string | null>(null);
   const [users, setUsers] = useState<AdminUser[]>(sampleUsers);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setAction(params.get("action"));
+  }, []);
 
   if (action === "new") {
     return (

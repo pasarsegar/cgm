@@ -17,7 +17,7 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [layoutStyle, setLayoutStyleState] = useState<AdminLayoutStyle>("wordpress");
-  const [siteName, setSiteNameState] = useState("LCP Auto Cars");
+  const [siteName, setSiteNameState] = useState("Mythoz");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,10 +46,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const setSiteName = async (name: string) => {
     setSiteNameState(name);
-    await supabase.from('settings').upsert({
-        key: 'site_name',
-        value: name
-    });
+    await supabase.from("settings").upsert([
+      { key: "site_name", value: name },
+      { key: "site_title", value: name },
+    ]);
   };
 
   return (

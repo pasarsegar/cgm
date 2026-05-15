@@ -31,7 +31,8 @@ export const initialBlockContent: Record<BlockType, any> = {
     buttonLink: "#"
   },
   text: {
-    html: "<p>Start writing your content here...</p>"
+    html: "<p>Start writing your content here...</p>",
+    noContainer: false
   },
   image: {
     url: "",

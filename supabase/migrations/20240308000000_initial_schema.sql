@@ -229,7 +229,8 @@ INSERT INTO public.pages (id, title, slug, content, status) VALUES
 
 -- Settings
 INSERT INTO public.settings (key, value, description) VALUES
-('site_title', 'LCP Auto Cars', 'The title of the website'),
+('site_title', 'Mythoz', 'The title of the website'),
+('site_name', 'Mythoz', 'The name of the website'),
 ('site_description', 'Premium car tuning and parts', 'The description of the website');
 
 -- Menus

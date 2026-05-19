@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { MenuItem, WidgetArea } from "@/lib/types";
 import Link from "next/link";
+import { useAdmin } from "@/lib/admin-context";
 
 export default function Footer() {
   const { themeSettings } = useShop();
+  const { siteName } = useAdmin();
   const [widgetAreas, setWidgetAreas] = useState<WidgetArea[]>([]);
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function Footer() {
                 // Fallback / Default Footer Content if no widgets configured
                 <>
                     <div>
-                        <h3 className="text-xl font-bold mb-4" style={{ color: themeSettings.primaryColor }}>LCP Auto Cars</h3>
+                        <h3 className="text-xl font-bold mb-4" style={{ color: themeSettings.primaryColor }}>{siteName}</h3>
                         <p className="text-sm leading-relaxed opacity-80">
                         Your trusted partner for car tuning and auto parts. We provide fully-registered tunings and high-quality service.
                         </p>
@@ -140,11 +142,20 @@ export default function Footer() {
         </div>
         
         <div className="border-t pt-6 flex flex-col md:flex-row justify-between items-center opacity-60" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-          <p className="text-sm">&copy; {new Date().getFullYear()} LCP Auto Cars. All rights reserved.</p>
-          <div className="flex space-x-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white transition"><Facebook className="w-5 h-5" /></a>
-            <a href="#" className="hover:text-white transition"><Twitter className="w-5 h-5" /></a>
-            <a href="#" className="hover:text-white transition"><Instagram className="w-5 h-5" /></a>
+          <p className="text-sm uppercase tracking-wider">
+            &copy; {themeSettings.footerYear || new Date().getFullYear()} {themeSettings.footerCopyrightText ? themeSettings.footerCopyrightText : `${siteName}. ALL RIGHTS RESERVED.`}
+          </p>
+          <div className="flex space-x-6 mt-4 md:mt-0 text-[11px] font-bold uppercase tracking-widest">
+            {themeSettings.showFooterPrivacy === true && (
+                <Link href="/privacy-policy" className="hover:text-primary transition-colors">
+                    Privacy Policy
+                </Link>
+            )}
+            {themeSettings.showFooterTerms === true && (
+                <Link href="/terms-of-service" className="hover:text-primary transition-colors">
+                    Terms of Service
+                </Link>
+            )}
           </div>
         </div>
       </div>

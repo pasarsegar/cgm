@@ -60,6 +60,10 @@ export interface ThemeSettings {
   footerTextColor: string;
   footerButtonColor: string;
   footerButtonTextColor: string;
+  footerYear?: string;
+  footerCopyrightText?: string;
+  showFooterPrivacy?: boolean;
+  showFooterTerms?: boolean;
 }
 
 interface CartItem extends Product {
@@ -148,7 +152,11 @@ const initialThemeSettings: ThemeSettings = {
   footerBackgroundColor: "#1d2327", // Default to dark footer to match server render
   footerTextColor: "#ffffff",
   footerButtonColor: "#ff4d00",
-  footerButtonTextColor: "#ffffff"
+  footerButtonTextColor: "#ffffff",
+  footerYear: new Date().getFullYear().toString(),
+  footerCopyrightText: "ALL RIGHTS RESERVED.",
+  showFooterPrivacy: true,
+  showFooterTerms: true
 };
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {

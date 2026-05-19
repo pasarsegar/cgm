@@ -1,5 +1,5 @@
 
-export type BlockType = 'hero' | 'text' | 'image' | 'button' | 'columns' | 'slider' | 'latest-products' | 'container' | 'product';
+export type BlockType = 'hero' | 'text' | 'image' | 'button' | 'columns' | 'slider' | 'latest-products' | 'container' | 'product' | 'gallery' | 'video';
 
 export interface BuilderBlock {
   id: string;
@@ -8,6 +8,18 @@ export interface BuilderBlock {
 }
 
 export const initialBlockContent: Record<BlockType, any> = {
+  gallery: {
+    images: [], // Array of {url, alt}
+    columns: "3", // 2, 3, 4
+    gap: "4"
+  },
+  video: {
+    url: "", // YouTube/Vimeo or Direct URL
+    type: "youtube", // youtube, vimeo, custom
+    autoPlay: false,
+    loop: false,
+    muted: false
+  },
   product: {
     productId: "", // Selected product ID
     showTitle: true,
@@ -32,7 +44,10 @@ export const initialBlockContent: Record<BlockType, any> = {
   },
   text: {
     html: "<p>Start writing your content here...</p>",
-    noContainer: false
+    noContainer: false,
+    color: "#333333",
+    fontSize: "16px",
+    fontFamily: "inherit"
   },
   image: {
     url: "",

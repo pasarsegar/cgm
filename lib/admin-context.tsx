@@ -10,6 +10,8 @@ interface AdminContextType {
   setLayoutStyle: (style: AdminLayoutStyle) => void;
   siteName: string;
   setSiteName: (name: string) => void;
+  adminEmail: string;
+  setAdminEmail: (email: string) => void;
   loading: boolean;
 }
 
@@ -17,7 +19,8 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [layoutStyle, setLayoutStyleState] = useState<AdminLayoutStyle>("wordpress");
-  const [siteName, setSiteNameState] = useState("Mythoz");
+  const [siteName, setSiteNameState] = useState("LCP Auto Cars");
+  const [adminEmail, setAdminEmailState] = useState("admin@lcpautocars.com");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +33,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         
         const name = data.find(s => s.key === 'site_name')?.value;
         if (name) setSiteNameState(name);
+
+        const email = data.find(s => s.key === 'admin_email')?.value;
+        if (email) setAdminEmailState(email);
       }
       setLoading(false);
     };
@@ -52,8 +58,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     ]);
   };
 
+  const setAdminEmail = async (email: string) => {
+    setAdminEmailState(email);
+    await supabase.from("settings").upsert({
+      key: "admin_email",
+      value: email
+    });
+  };
+
   return (
-    <AdminContext.Provider value={{ layoutStyle, setLayoutStyle, siteName, setSiteName, loading }}>
+    <AdminContext.Provider value={{ 
+      layoutStyle, 
+      setLayoutStyle, 
+      siteName, 
+      setSiteName, 
+      adminEmail, 
+      setAdminEmail, 
+      loading 
+    }}>
       {children}
     </AdminContext.Provider>
   );

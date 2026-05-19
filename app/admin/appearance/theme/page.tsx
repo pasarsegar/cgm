@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useShop } from "@/context/ShopContext";
 import { Save, Loader2, RotateCcw } from "lucide-react";
 
@@ -9,14 +9,22 @@ export default function AdminTheme() {
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState(themeSettings);
 
+  // Sync local settings with theme settings once they load from database
+  useEffect(() => {
+    setSettings(themeSettings);
+  }, [themeSettings]);
+
   const updateHeaderSettings = (update: Partial<typeof headerSettings>) => {
       setHeaderSettings({ ...headerSettings, ...update });
   };
 
   const handleSave = async () => {
     setLoading(true);
-    await setThemeSettings(settings);
-    // Header settings are already updated in context via setHeaderSettings
+    // Ensure all settings from the local form state are saved
+    await Promise.all([
+        setThemeSettings(settings),
+        setHeaderSettings(headerSettings)
+    ]);
     setLoading(false);
   };
 
@@ -350,6 +358,54 @@ export default function AdminTheme() {
                                 onChange={(e) => setSettings({ ...settings, footerTextColor: e.target.value })}
                                 className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm uppercase"
                             />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                    <h4 className="text-sm font-bold text-gray-900 mb-4">Bottom Section</h4>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Copyright Year</label>
+                                <input 
+                                    type="text" 
+                                    value={settings.footerYear || ''}
+                                    onChange={(e) => setSettings({ ...settings, footerYear: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                                    placeholder={new Date().getFullYear().toString()}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Copyright Text</label>
+                                <input 
+                                    type="text" 
+                                    value={settings.footerCopyrightText || ''}
+                                    onChange={(e) => setSettings({ ...settings, footerCopyrightText: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                                    placeholder="e.g. ALL RIGHTS RESERVED."
+                                />
+                            </div>
+                        </div>
+                        <div className="flex space-x-6">
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={settings.showFooterPrivacy}
+                                    onChange={(e) => setSettings({ ...settings, showFooterPrivacy: e.target.checked })}
+                                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Show Privacy Policy</span>
+                            </label>
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={settings.showFooterTerms}
+                                    onChange={(e) => setSettings({ ...settings, showFooterTerms: e.target.checked })}
+                                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Show Terms of Service</span>
+                            </label>
                         </div>
                     </div>
                 </div>

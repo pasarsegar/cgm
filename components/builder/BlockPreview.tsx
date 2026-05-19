@@ -66,23 +66,49 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
                 )}
             </div>
         );
-    case 'product':
+    case 'gallery':
+        const galleryImages = block.content.images || [];
         return (
-            <div className="p-4 border border-gray-200 rounded-lg bg-white text-center shadow-sm">
-                <div className="bg-gray-100 h-32 w-full mb-3 rounded flex items-center justify-center">
-                    <ShoppingBag className="text-gray-400 w-8 h-8" />
+            <div className="p-4 border border-dashed border-gray-200 rounded bg-white">
+                <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${block.content.columns || 3}, minmax(0, 1fr))` }}>
+                    {galleryImages.length > 0 ? (
+                        galleryImages.map((img: any, idx: number) => (
+                            <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
+                                {img.url ? (
+                                    <img src={img.url} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                        <ImageIcon className="w-4 h-4" />
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        [...Array(3)].map((_, i) => (
+                            <div key={i} className="aspect-square bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center text-gray-300">
+                                <ImageIcon className="w-6 h-6" />
+                            </div>
+                        ))
+                    )}
                 </div>
-                {block.content.showTitle && (
-                    <div className="font-bold text-sm mb-1">{block.content.productId ? "Product Name" : "Select Product"}</div>
-                )}
-                {block.content.showPrice && (
-                    <div className="text-orange-500 font-bold text-sm mb-2">$99.00</div>
-                )}
-                {block.content.showButton && (
-                    <button className="px-4 py-1.5 bg-orange-500 text-white text-xs font-bold rounded uppercase tracking-wider">
-                        View Details
-                    </button>
-                )}
+                <div className="text-center text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-wider">Image Gallery ({galleryImages.length} images)</div>
+            </div>
+        );
+    case 'video':
+        return (
+            <div className="p-4 border border-dashed border-gray-200 rounded bg-white">
+                <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <div className="z-10 text-white flex flex-col items-center">
+                        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center mb-2 shadow-lg">
+                            <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
+                        </div>
+                        <div className="text-xs font-bold uppercase tracking-widest">{block.content.type} Video</div>
+                        <div className="text-[10px] text-gray-400 mt-1 max-w-[200px] truncate">{block.content.url || 'No URL provided'}</div>
+                    </div>
+                    {block.content.type === 'custom' && block.content.url && (
+                        <video src={block.content.url} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                    )}
+                </div>
             </div>
         );
     case 'hero':
@@ -105,7 +131,14 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
       );
     case 'text':
       return (
-        <div className="prose max-w-none p-4 border border-dashed border-gray-200 rounded min-h-[100px]">
+        <div 
+            className="prose max-w-none p-4 border border-dashed border-gray-200 rounded min-h-[100px]"
+            style={{ 
+                color: block.content.color || 'inherit',
+                fontSize: block.content.fontSize || 'inherit',
+                fontFamily: block.content.fontFamily || 'inherit'
+            }}
+        >
             {block.content.html ? parse(block.content.html) : <p className="text-gray-400 italic">Start typing text...</p>}
         </div>
       );

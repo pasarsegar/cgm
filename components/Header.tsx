@@ -8,6 +8,7 @@ import { useShop } from "@/context/ShopContext";
 import { supabase } from "@/lib/supabase";
 import { MenuItem } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { useAdmin } from "@/lib/admin-context";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +17,7 @@ export default function Header() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const { currency } = useCurrency();
   const { headerSettings, cartCount } = useShop();
+  const { siteName } = useAdmin();
   const router = useRouter();
 
   useEffect(() => {
@@ -94,10 +96,10 @@ export default function Header() {
       <div className="container mx-auto px-4 h-full flex items-center justify-between" style={{ minHeight: headerSettings.height }}>
         <Link href="/" className="text-2xl font-bold flex items-center" style={{ color: headerSettings.buttonColor }}>
           {headerSettings.logoUrl ? (
-            <img src={headerSettings.logoUrl} alt="LCP Auto Cars" style={{ height: headerSettings.logoHeight || '40px' }} />
+            <img src={headerSettings.logoUrl} alt={siteName} style={{ height: headerSettings.logoHeight || '40px' }} />
           ) : (
             <>
-                LCP Auto Cars
+                {siteName}
                 {currency === "IDR" && <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded border border-red-200">ID</span>}
             </>
           )}

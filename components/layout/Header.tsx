@@ -288,7 +288,7 @@ export default function Header() {
                     <img src={headerSettings.logoUrl} alt={siteName} style={{ height: headerSettings.logoHeight || '40px' }} />
                 ) : (
                     <span className="text-2xl font-black italic" style={{ color: headerSettings.textColor }}>
-                    {siteName.split(' ')[0]}<span className="text-primary">{siteName.split(' ').slice(1).join('') || 'AUTO'}</span>
+                    {siteName}
                     </span>
                 )}
                 

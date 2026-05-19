@@ -92,7 +92,7 @@ export default function BuilderEditor({ initialContent, onChange }: BuilderEdito
     <div className="bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300 min-h-[500px]">
       
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        {(['container', 'hero', 'text', 'image', 'button', 'columns', 'slider', 'latest-products'] as BlockType[]).map((type) => (
+        {(['container', 'hero', 'text', 'image', 'gallery', 'video', 'button', 'columns', 'slider', 'latest-products'] as BlockType[]).map((type) => (
             <button
                 key={type}
                 onClick={() => addBlock(type)}

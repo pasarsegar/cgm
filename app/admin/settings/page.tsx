@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function AdminSettings() {
-  const { layoutStyle, setLayoutStyle, siteName, setSiteName } = useAdmin();
+  const { layoutStyle, setLayoutStyle, siteName, setSiteName, adminEmail, setAdminEmail } = useAdmin();
   const { 
     generalSettings, setGeneralSettings, 
     headerSettings, setHeaderSettings, 
@@ -31,6 +31,7 @@ export default function AdminSettings() {
   const [localHeader, setLocalHeader] = useState<HeaderSettings>(headerSettings);
   const [localTheme, setLocalTheme] = useState<ThemeSettings>(themeSettings);
   const [localPayment, setLocalPayment] = useState<PaymentSettings>(paymentSettings);
+  const [localEmail, setLocalEmail] = useState(adminEmail);
   
   const [activeTab, setActiveTab] = useState("General");
   const [isSaving, setIsSaving] = useState(false);
@@ -41,6 +42,7 @@ export default function AdminSettings() {
   useEffect(() => { setLocalHeader(headerSettings); }, [headerSettings]);
   useEffect(() => { setLocalTheme(themeSettings); }, [themeSettings]);
   useEffect(() => { setLocalPayment(paymentSettings); }, [paymentSettings]);
+  useEffect(() => { setLocalEmail(adminEmail); }, [adminEmail]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -51,7 +53,8 @@ export default function AdminSettings() {
         setGeneralSettings(localGeneral),
         setHeaderSettings(localHeader),
         setPaymentSettings(localPayment),
-        setThemeSettings(localTheme)
+        setThemeSettings(localTheme),
+        setAdminEmail(localEmail)
     ]).then(() => {
         setIsSaving(false);
         setSaveMessage("Settings saved successfully.");
@@ -191,7 +194,8 @@ export default function AdminSettings() {
                 <input 
                   type="email" 
                   className="w-full md:w-2/3 border border-[#ccd0d4] px-3 py-1.5 focus:border-[#2271b1] outline-none" 
-                  defaultValue="admin@lcpautocars.com"
+                  value={localEmail}
+                  onChange={(e) => setLocalEmail(e.target.value)}
                 />
                 <p className="text-xs text-gray-500 mt-1 italic">This address is used for admin purposes. If you change this, we will send you an email at your new address to confirm it.</p>
               </div>

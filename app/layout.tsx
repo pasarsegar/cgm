@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     if (error) throw error;
 
     const values = new Map((data || []).map((row) => [row.key, row.value]));
-    const title = values.get("site_title") || values.get("site_name") || "Mythoz";
+    const title = values.get("site_title") || values.get("site_name") || "LCP Auto Cars";
     const tagline = values.get("site_tagline") || "";
 
     return {
@@ -23,8 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: "Mythoz",
-      description: "Mythoz",
+      title: "LCP Auto Cars",
+      description: "LCP Auto Cars",
     };
   }
 }

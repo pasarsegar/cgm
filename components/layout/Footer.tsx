@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import BuilderRendererLite from "@/components/builder/BuilderRendererLite";
 import parse from "html-react-parser";
 import { useAdmin } from "@/lib/admin-context";
+import { useShop } from "@/context/ShopContext";
 
 type WidgetType = "search" | "recent_posts" | "categories" | "custom_html" | "text" | "image";
 type FooterWidget = {
@@ -25,6 +26,7 @@ type FooterWidgetArea = {
 
 export default function Footer() {
   const { siteName } = useAdmin();
+  const { themeSettings } = useShop();
   const [footerContent, setFooterContent] = useState<string>("");
   const [footerWidgetAreas, setFooterWidgetAreas] = useState<FooterWidgetArea[]>([]);
 
@@ -189,14 +191,18 @@ export default function Footer() {
           </div>
 
           <div className="pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold">
-            <p>© 2024 {siteName}. ALL RIGHTS RESERVED.</p>
+            <p>&copy; {themeSettings.footerYear || new Date().getFullYear()} {themeSettings.footerCopyrightText || `${siteName}. ALL RIGHTS RESERVED.`}</p>
             <div className="flex space-x-6">
-              <Link href="/privacy" className="hover:opacity-100">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="hover:opacity-100">
-                Terms of Service
-              </Link>
+              {themeSettings.showFooterPrivacy === true && (
+                <Link href="/privacy" className="hover:opacity-100">
+                  Privacy Policy
+                </Link>
+              )}
+              {themeSettings.showFooterTerms === true && (
+                <Link href="/terms" className="hover:opacity-100">
+                  Terms of Service
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -280,10 +286,10 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold">
-          <p>© 2024 {siteName}. ALL RIGHTS RESERVED.</p>
+          <p>&copy; {themeSettings.footerYear || new Date().getFullYear()} {themeSettings.footerCopyrightText || `${siteName}. ALL RIGHTS RESERVED.`}</p>
           <div className="flex space-x-6">
-            <Link href="/privacy" className="hover:opacity-100">Privacy Policy</Link>
-            <Link href="/terms" className="hover:opacity-100">Terms of Service</Link>
+            {themeSettings.showFooterPrivacy === true && <Link href="/privacy" className="hover:opacity-100">Privacy Policy</Link>}
+            {themeSettings.showFooterTerms === true && <Link href="/terms" className="hover:opacity-100">Terms of Service</Link>}
           </div>
         </div>
       </div>

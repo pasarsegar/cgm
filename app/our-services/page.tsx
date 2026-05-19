@@ -46,9 +46,9 @@ export default async function OurServices() {
       
       <div className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4">LCP SERVICE CENTER</h1>
+            <h1 className="text-4xl font-bold mb-4">CGM SERVICE CENTER</h1>
             <p className="max-w-2xl mx-auto text-gray-300">
-                Are you ready to give your car the service it is asking for? Schedule car maintenance or repair right here. Our top-notch service staff can get your car or truck in and out quickly.
+                Are you ready to give your equipment the service it is asking for? Schedule maintenance or repair right here. Our top-notch service staff can get your equipment in and out quickly.
             </p>
         </div>
       </div>

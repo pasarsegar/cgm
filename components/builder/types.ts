@@ -67,7 +67,7 @@ export const initialBlockContent: Record<BlockType, any> = {
     alias: "home-slider" // For RevSlider alias
   },
   'latest-products': {
-    title: "Latest Tuning Parts",
+    title: "Latest Products",
     count: 3
   }
 };

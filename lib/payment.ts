@@ -18,7 +18,7 @@ export async function createPaymentSession(amount: number, currency: "USD" | "ID
           price_data: {
             currency: currency.toLowerCase(),
             product_data: {
-              name: "Mythoz Order",
+              name: "Order Payment",
             },
             unit_amount: Math.round(amount * 100), // convert to cents
           },

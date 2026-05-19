@@ -13,7 +13,7 @@ export const samplePages: Page[] = [
     id: "1",
     title: "Home",
     slug: "home",
-    content: "Welcome to LCP Auto Cars. We provide premium car tuning and parts.",
+    content: "Welcome to CGMscale. We provide premium industrial scaling solutions.",
     status: "publish",
     author: "admin",
     date: "2024-01-15T08:00:00Z"
@@ -22,7 +22,7 @@ export const samplePages: Page[] = [
     id: "2",
     title: "About Us",
     slug: "about-us",
-    content: "Our team has over 10 years of experience in high-performance automotive tuning.",
+    content: "Our team has over 10 years of experience in high-precision measurement systems.",
     status: "publish",
     author: "admin",
     date: "2024-01-20T11:30:00Z"

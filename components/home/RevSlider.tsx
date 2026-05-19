@@ -27,7 +27,7 @@ export default function RevSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full h-[80vh] md:h-[600px] overflow-hidden group bg-[#1d2327]">
+    <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[600px] overflow-hidden group bg-[#1d2327]">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div 
@@ -44,12 +44,12 @@ export default function RevSlider() {
                 alt={slide.title} 
                 className="w-full h-full object-cover object-center scale-100" 
             />
-            <div className="absolute inset-0 bg-black/60 md:bg-black/50" />
+            <div className="absolute inset-0 bg-black/50 md:bg-black/40" />
           </div>
 
           {/* Content */}
           <div className={cn(
-            "relative h-full w-full px-4 sm:px-12 flex flex-col justify-center text-white",
+            "relative h-full w-full px-6 sm:px-12 flex flex-col justify-center text-white",
             // Always center on mobile, use slide settings on desktop
             "items-center text-center md:items-start md:text-left",
             slide.buttonPosition === 'center' ? 'md:items-center md:text-center' :
@@ -57,7 +57,7 @@ export default function RevSlider() {
             'md:items-start md:text-left'
           )}>
             <div className={cn(
-              "space-y-6 md:space-y-6 w-full max-w-4xl transform transition-all duration-700 delay-300",
+              "space-y-4 md:space-y-6 w-full max-w-4xl transform transition-all duration-700 delay-300",
               index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
               // Layout adjustments for alignment
               "flex flex-col items-center md:items-start",
@@ -68,22 +68,22 @@ export default function RevSlider() {
               <span className="text-primary font-black text-[10px] md:text-xs uppercase tracking-[0.3em]">
                 {slide.subtitle}
               </span>
-              <h2 className="text-3xl md:text-6xl font-black italic uppercase leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-6xl font-black italic uppercase leading-tight">
                 {slide.title}
               </h2>
-              <p className="text-gray-300 text-sm md:text-lg max-w-xl leading-relaxed line-clamp-3 md:line-clamp-none">
+              <p className="text-gray-300 text-xs sm:text-sm md:text-lg max-w-xl leading-relaxed line-clamp-2 md:line-clamp-none">
                 {slide.description}
               </p>
-              <div className="pt-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full md:w-auto">
+              <div className="pt-2 md:pt-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full md:w-auto">
                 <a 
                   href={slide.buttonLink}
-                  className="w-full sm:w-auto bg-primary text-white px-8 py-3 md:py-4 text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 flex items-center justify-center group/btn"
+                  className="w-full sm:w-auto bg-primary text-white px-6 py-2 md:px-8 md:py-4 text-[10px] md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 flex items-center justify-center group/btn"
                 >
                   {slide.buttonText}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </a>
                 {slide.secondButtonText && (
-                  <a href={slide.secondButtonLink || '#'} className="text-white text-xs md:text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1">
+                  <a href={slide.secondButtonLink || '#'} className="text-white text-[10px] md:text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1">
                     {slide.secondButtonText}
                   </a>
                 )}

@@ -148,9 +148,12 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
         const children = block.content.children || [];
 
          return (
-             <div style={containerStyle} className="container-block">
+             <div style={containerStyle} className="container-block w-full">
                  {children.map((child: BuilderBlock & { data?: any }) => (
-                     <div key={child.id} className="container-child">
+                     <div key={child.id} className={cn(
+                         "container-child w-full",
+                         child.type === 'slider' ? "max-w-none px-0" : ""
+                     )}>
                           {renderBlock(child)}
                      </div>
                  ))}
@@ -211,9 +214,16 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
       );
     case 'gallery':
       const galleryImages = block.content.images || [];
+      const galleryColumns = parseInt(block.content.columns) || 3;
       return (
         <div className="container mx-auto px-4 py-8">
-            <div className={`grid gap-${block.content.gap || 4}`} style={{ gridTemplateColumns: `repeat(${block.content.columns || 3}, minmax(0, 1fr))` }}>
+            <div className={cn(
+                "grid gap-4",
+                galleryColumns === 1 ? "grid-cols-1" :
+                galleryColumns === 2 ? "grid-cols-2" :
+                galleryColumns === 3 ? "grid-cols-2 md:grid-cols-3" :
+                "grid-cols-2 lg:grid-cols-4"
+            )}>
                 {galleryImages.map((img: any, idx: number) => (
                     <div key={idx} className="aspect-square overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <img 

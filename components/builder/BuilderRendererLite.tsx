@@ -72,9 +72,12 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
       const children: BuilderBlock[] = block.content.children || [];
 
       return (
-        <div style={style} className="container-block">
+        <div style={style} className="container-block w-full">
           {children.map((child) => (
-            <div key={child.id} className="container-child">
+            <div key={child.id} className={cn(
+                "container-child w-full",
+                child.type === 'slider' ? "max-w-none px-0" : ""
+            )}>
               {renderBlock(child)}
             </div>
           ))}
@@ -116,15 +119,15 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
 
     case "gallery": {
       const galleryImages = block.content.images || [];
-      const columns = block.content.columns || 3;
+      const galleryColumns = parseInt(block.content.columns) || 3;
       return (
         <div className="container mx-auto px-4 py-8">
           <div
             className={cn(
               "grid gap-4",
-              columns === 1 ? "grid-cols-1" :
-              columns === 2 ? "grid-cols-2" :
-              columns === 3 ? "grid-cols-2 md:grid-cols-3" :
+              galleryColumns === 1 ? "grid-cols-1" :
+              galleryColumns === 2 ? "grid-cols-2" :
+              galleryColumns === 3 ? "grid-cols-2 md:grid-cols-3" :
               "grid-cols-2 lg:grid-cols-4"
             )}
           >

@@ -134,7 +134,7 @@ const initialHeaderSettings: HeaderSettings = {
   menuPosition: 'center',
   iconsPosition: 'right',
   topBarShow: true,
-  topBarMessage: "Free Shipping on all Tuning Parts over $500",
+  topBarMessage: "Welcome to our store",
   topBarBackgroundColor: "#1d2327",
   topBarTextColor: "#ffffff"
 };

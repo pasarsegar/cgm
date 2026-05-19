@@ -19,8 +19,8 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [layoutStyle, setLayoutStyleState] = useState<AdminLayoutStyle>("wordpress");
-  const [siteName, setSiteNameState] = useState("LCP Auto Cars");
-  const [adminEmail, setAdminEmailState] = useState("admin@lcpautocars.com");
+  const [siteName, setSiteNameState] = useState("CGMscale");
+  const [adminEmail, setAdminEmailState] = useState("admin@cgmscale.com");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

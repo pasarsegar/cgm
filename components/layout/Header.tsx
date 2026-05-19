@@ -76,11 +76,9 @@ export default function Header() {
     } else {
       // Fallback if no menu is defined
       setMenuItems([
-        { id: '1', label: 'Shop', type: 'page', url: '/shop' },
-        { id: '2', label: 'Tuning', type: 'page', url: '/tuning' },
-        { id: '3', label: 'Services', type: 'page', url: '/services' },
-        { id: '4', label: 'About', type: 'page', url: '/about' },
-        { id: '5', label: 'Contact', type: 'page', url: '/contact' }
+        { id: '1', label: 'Home', type: 'page', url: '/' },
+        { id: '2', label: 'About', type: 'page', url: '/about' },
+        { id: '3', label: 'Gallery', type: 'page', url: '/gallery' },
       ]);
     }
     setLoading(false);

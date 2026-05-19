@@ -27,7 +27,7 @@ export default function RevSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden group bg-[#1d2327]">
+    <div className="relative w-full h-[80vh] md:h-[600px] overflow-hidden group bg-[#1d2327]">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div 
@@ -39,13 +39,17 @@ export default function RevSlider() {
         >
           {/* Background Image */}
           <div className="absolute inset-0">
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+            <img 
+                src={slide.image} 
+                alt={slide.title} 
+                className="w-full h-full object-cover object-center" 
+            />
             <div className="absolute inset-0 bg-black/60 md:bg-black/50" />
           </div>
 
           {/* Content */}
           <div className={cn(
-            "relative h-full max-w-7xl mx-auto px-6 sm:px-12 flex flex-col justify-center text-white",
+            "relative h-full w-full mx-auto px-6 sm:px-12 flex flex-col justify-center text-white",
             // Always center on mobile, use slide settings on desktop
             "items-center text-center md:items-start md:text-left",
             slide.buttonPosition === 'center' ? 'md:items-center md:text-center' :
@@ -53,7 +57,7 @@ export default function RevSlider() {
             'md:items-start md:text-left'
           )}>
             <div className={cn(
-              "space-y-4 md:space-y-6 max-w-2xl transform transition-all duration-700 delay-300",
+              "space-y-6 md:space-y-6 w-full max-w-2xl transform transition-all duration-700 delay-300",
               index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
               // Layout adjustments for alignment
               "flex flex-col items-center md:items-start",

@@ -210,65 +210,15 @@ export default function Header() {
       }}
     >
       {/* Top Bar (Optional) */}
-      {headerTopContent ? (
-        headerTopContent.trim().startsWith("[") ? (
-          <BuilderRendererLite content={headerTopContent} />
-        ) : (
-          <>{parse(headerTopContent)}</>
-        )
-      ) : headerTopWidgets.length > 0 ? (
-        <div className="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] uppercase tracking-widest font-bold">
-          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
-            {headerTopWidgets.map((widget) => (
-              <div key={widget.id} className="flex items-center gap-2">
-                {widget.type === "text" || widget.type === "custom_html" ? (
-                  <span className="font-bold">{parse(widget.settings.text || "")}</span>
-                ) : widget.type === "image" ? (
-                  widget.settings.url ? (
-                    widget.settings.link ? (
-                      <a href={widget.settings.link} className="inline-flex items-center">
-                        <img
-                          src={widget.settings.url}
-                          alt={widget.settings.alt || ""}
-                          className="h-5 w-auto"
-                        />
-                      </a>
-                    ) : (
-                      <img
-                        src={widget.settings.url}
-                        alt={widget.settings.alt || ""}
-                        className="h-5 w-auto"
-                      />
-                    )
-                  ) : null
-                ) : widget.type === "search" ? (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const form = e.currentTarget as HTMLFormElement;
-                      const input = form.elements.namedItem("q") as HTMLInputElement | null;
-                      const q = input?.value || "";
-                      if (q.trim()) router.push(`/search?q=${encodeURIComponent(q)}`);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <input
-                      name="q"
-                      placeholder="Search..."
-                      className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[11px] outline-none placeholder:text-white/70"
-                    />
-                    <button type="submit" className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[11px]">
-                      Go
-                    </button>
-                  </form>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] text-center uppercase tracking-widest font-bold">
-          Free Shipping on all Tuning Parts over $500
+      {headerSettings.topBarShow && (
+        <div 
+          className="py-1.5 px-4 text-[11px] text-center uppercase tracking-widest font-bold"
+          style={{ 
+            backgroundColor: headerSettings.topBarBackgroundColor, 
+            color: headerSettings.topBarTextColor 
+          }}
+        >
+          {headerSettings.topBarMessage}
         </div>
       )}
 

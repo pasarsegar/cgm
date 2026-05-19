@@ -36,6 +36,10 @@ export interface HeaderSettings {
   showSearch: boolean;
   showAccount: boolean;
   showCart: boolean;
+  topBarShow: boolean;
+  topBarMessage: string;
+  topBarBackgroundColor: string;
+  topBarTextColor: string;
 }
 
 export interface PaymentSettings {
@@ -128,7 +132,11 @@ const initialHeaderSettings: HeaderSettings = {
   logoHeight: "40px",
   logoPosition: 'left',
   menuPosition: 'center',
-  iconsPosition: 'right'
+  iconsPosition: 'right',
+  topBarShow: true,
+  topBarMessage: "Free Shipping on all Tuning Parts over $500",
+  topBarBackgroundColor: "#1d2327",
+  topBarTextColor: "#ffffff"
 };
 
 const initialPaymentSettings: PaymentSettings = {

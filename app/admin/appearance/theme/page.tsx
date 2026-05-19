@@ -160,6 +160,70 @@ export default function AdminTheme() {
                     </label>
                 </div>
             </div>
+
+            <div className="col-span-2 pt-6 border-t border-gray-100">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Top Bar (Announcement)</label>
+                <div className="flex items-center space-x-4 mb-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={headerSettings.topBarShow}
+                            onChange={(e) => updateHeaderSettings({ topBarShow: e.target.checked })}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Show Top Bar</span>
+                    </label>
+                </div>
+                
+                {headerSettings.topBarShow && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+                        <div className="col-span-2">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Announcement Message</label>
+                            <input 
+                                type="text" 
+                                value={headerSettings.topBarMessage}
+                                onChange={(e) => updateHeaderSettings({ topBarMessage: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                                placeholder="e.g. Free Shipping on all orders over $500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Background Color</label>
+                            <div className="flex items-center space-x-3">
+                                <input 
+                                    type="color" 
+                                    value={headerSettings.topBarBackgroundColor}
+                                    onChange={(e) => updateHeaderSettings({ topBarBackgroundColor: e.target.value })}
+                                    className="w-10 h-10 rounded border border-gray-200 cursor-pointer p-1"
+                                />
+                                <input 
+                                    type="text" 
+                                    value={headerSettings.topBarBackgroundColor}
+                                    onChange={(e) => updateHeaderSettings({ topBarBackgroundColor: e.target.value })}
+                                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-xs uppercase"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Text Color</label>
+                            <div className="flex items-center space-x-3">
+                                <input 
+                                    type="color" 
+                                    value={headerSettings.topBarTextColor}
+                                    onChange={(e) => updateHeaderSettings({ topBarTextColor: e.target.value })}
+                                    className="w-10 h-10 rounded border border-gray-200 cursor-pointer p-1"
+                                />
+                                <input 
+                                    type="text" 
+                                    value={headerSettings.topBarTextColor}
+                                    onChange={(e) => updateHeaderSettings({ topBarTextColor: e.target.value })}
+                                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg font-mono text-xs uppercase"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
       </div>
 

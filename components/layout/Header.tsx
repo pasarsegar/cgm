@@ -444,6 +444,88 @@ export default function Header() {
           ))}
         </div>
       )}
+      {/* Mobile Menu Overlay */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-[100] md:hidden">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
+          <div 
+            className="absolute top-0 right-0 w-4/5 max-w-sm h-full shadow-2xl flex flex-col"
+            style={{ backgroundColor: headerSettings.backgroundColor }}
+          >
+            <div className="p-6 border-b border-black/5 flex items-center justify-between">
+              <Link href="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
+                {headerSettings.logoUrl ? (
+                    <img src={headerSettings.logoUrl} alt={siteName} style={{ height: '32px' }} />
+                ) : (
+                    <span className="text-xl font-black italic" style={{ color: headerSettings.textColor }}>
+                    {siteName}
+                    </span>
+                )}
+              </Link>
+              <button onClick={() => setIsMenuOpen(false)} style={{ color: headerSettings.textColor }}>
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto py-6 px-6">
+              <nav className="flex flex-col space-y-6">
+                {menuItems.map((item) => (
+                  <div key={item.id} className="space-y-4">
+                    <Link 
+                      href={item.url || '#'} 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="text-lg font-black uppercase tracking-widest block"
+                      style={{ color: headerSettings.textColor }}
+                    >
+                      {item.label}
+                    </Link>
+                    {item.children && item.children.length > 0 && (
+                      <div className="pl-4 space-y-4 border-l-2 border-primary/20">
+                        {item.children.map(child => (
+                          <Link 
+                            key={child.id}
+                            href={child.url || '#'}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-sm font-bold uppercase tracking-wider block opacity-70"
+                            style={{ color: headerSettings.textColor }}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </nav>
+            </div>
+
+            <div className="p-8 border-t border-black/5 space-y-6">
+                {headerSettings.showAccount && (
+                    <Link 
+                      href="/account" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 font-bold uppercase tracking-wider text-sm"
+                      style={{ color: headerSettings.textColor }}
+                    >
+                        <User className="w-5 h-5" />
+                        Account
+                    </Link>
+                )}
+                {headerSettings.showCart && (
+                    <Link 
+                      href="/cart" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 font-bold uppercase tracking-wider text-sm"
+                      style={{ color: headerSettings.textColor }}
+                    >
+                        <ShoppingCart className="w-5 h-5" />
+                        Cart ({cartCount})
+                    </Link>
+                )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

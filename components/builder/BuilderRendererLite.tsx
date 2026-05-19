@@ -3,6 +3,7 @@
 import { BuilderBlock } from "./types";
 import parse from "html-react-parser";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function BuilderRendererLite({ content }: { content: string }) {
   let blocks: BuilderBlock[] = [];
@@ -108,11 +109,17 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
 
     case "gallery": {
       const galleryImages = block.content.images || [];
+      const columns = block.content.columns || 3;
       return (
         <div className="container mx-auto px-4 py-8">
           <div
-            className={`grid gap-${block.content.gap || 4}`}
-            style={{ gridTemplateColumns: `repeat(${block.content.columns || 3}, minmax(0, 1fr))` }}
+            className={cn(
+              "grid gap-4",
+              columns === 1 ? "grid-cols-1" :
+              columns === 2 ? "grid-cols-2" :
+              columns === 3 ? "grid-cols-2 md:grid-cols-3" :
+              "grid-cols-2 lg:grid-cols-4"
+            )}
           >
             {galleryImages.map((img: any, idx: number) => (
               <div key={idx} className="aspect-square overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -188,17 +195,18 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
       return (
         <div className="container mx-auto px-4 py-8">
           <div
-            className={`grid gap-8 ${
+            className={cn(
+              "grid gap-8",
               block.content.type === "4-col"
-                ? "md:grid-cols-4"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
                 : block.content.type === "3-col"
-                  ? "md:grid-cols-3"
+                  ? "grid-cols-1 md:grid-cols-3"
                   : block.content.type === "2-col-left-small"
-                    ? "md:grid-cols-[1fr_2fr]"
+                    ? "grid-cols-1 md:grid-cols-[1fr_2fr]"
                     : block.content.type === "2-col-right-small"
-                      ? "md:grid-cols-[2fr_1fr]"
-                      : "md:grid-cols-2"
-            }`}
+                      ? "grid-cols-1 md:grid-cols-[2fr_1fr]"
+                      : "grid-cols-1 md:grid-cols-2"
+            )}
           >
             {columns.map((columnBlocks, index) => {
               if (block.content.type === "2-col" && index > 1) return null;

@@ -27,7 +27,7 @@ export default function RevSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full h-[600px] overflow-hidden group bg-[#1d2327]">
+    <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden group bg-[#1d2327]">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div 
@@ -40,42 +40,42 @@ export default function RevSlider() {
           {/* Background Image */}
           <div className="absolute inset-0">
             <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/60 md:bg-black/50" />
           </div>
 
           {/* Content */}
           <div className={cn(
-            "relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center text-white",
+            "relative h-full max-w-7xl mx-auto px-6 sm:px-12 flex flex-col justify-center text-white",
             slide.buttonPosition === 'center' ? 'items-center text-center' :
             slide.buttonPosition === 'right' ? 'items-end text-right' :
             'items-start text-left'
           )}>
             <div className={cn(
-              "space-y-6 max-w-2xl transform transition-all duration-700 delay-300",
+              "space-y-4 md:space-y-6 max-w-2xl transform transition-all duration-700 delay-300",
               index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
               slide.buttonPosition === 'center' ? 'flex flex-col items-center' :
               slide.buttonPosition === 'right' ? 'flex flex-col items-end' :
               ''
             )}>
-              <span className="text-primary font-black text-xs uppercase tracking-[0.3em]">
+              <span className="text-primary font-black text-[10px] md:text-xs uppercase tracking-[0.3em]">
                 {slide.subtitle}
               </span>
-              <h2 className="text-4xl md:text-6xl font-black italic uppercase leading-tight">
+              <h2 className="text-3xl md:text-6xl font-black italic uppercase leading-tight">
                 {slide.title}
               </h2>
-              <p className="text-gray-300 text-lg max-w-xl leading-relaxed">
+              <p className="text-gray-300 text-sm md:text-lg max-w-xl leading-relaxed line-clamp-3 md:line-clamp-none">
                 {slide.description}
               </p>
-              <div className="pt-4 flex items-center space-x-6">
+              <div className="pt-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <a 
                   href={slide.buttonLink}
-                  className="bg-primary text-white px-8 py-4 text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 flex items-center group/btn"
+                  className="w-full sm:w-auto bg-primary text-white px-8 py-3 md:py-4 text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 flex items-center justify-center group/btn"
                 >
                   {slide.buttonText}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </a>
                 {slide.secondButtonText && (
-                  <a href={slide.secondButtonLink || '#'} className="text-white text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1">
+                  <a href={slide.secondButtonLink || '#'} className="text-white text-xs md:text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1">
                     {slide.secondButtonText}
                   </a>
                 )}
@@ -85,29 +85,29 @@ export default function RevSlider() {
         </div>
       ))}
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - Hidden on Mobile */}
       <button 
         onClick={prevSlide}
-        className="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
+        className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button 
         onClick={nextSlide}
-        className="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
+        className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      {/* Slide Indicators */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex space-x-3">
+      {/* Progress Indicators - Improved for Mobile */}
+      <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex space-x-3">
         {slides.map((_, index) => (
-          <button 
+          <button
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={cn(
-              "w-12 h-1 rounded-full transition-all duration-300",
-              index === currentSlide ? "bg-orange-600" : "bg-white/20"
+              "h-1 transition-all duration-300 rounded-full",
+              index === currentSlide ? "w-8 md:w-12 bg-primary" : "w-4 md:w-6 bg-white/30"
             )}
           />
         ))}

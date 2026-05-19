@@ -287,15 +287,17 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     writeLocalJson("shop_slides", newSlides);
     // In a real CMS, we'd update the 'sliders' table
     try {
-      await supabase.from('sliders').upsert({
+      const { error } = await supabase.from('sliders').upsert({
           id: 'main-slider',
           name: 'Main Slider',
           slides: newSlides,
           active: true
       });
+      if (error) throw error;
       setOfflineMode(false);
-    } catch {
+    } catch (e: any) {
       setOfflineMode(true);
+      alert(`Supabase Error: ${e.message || 'Could not save slider'}. Changes saved locally in this browser.`);
     }
   };
 
@@ -303,13 +305,15 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     setGeneralSettingsState(settings);
     writeLocalJson("shop_general_settings", settings);
     try {
-      await supabase.from('settings').upsert({
+      const { error } = await supabase.from('settings').upsert({
           key: 'general_settings',
           value: JSON.stringify(settings)
       });
+      if (error) throw error;
       setOfflineMode(false);
-    } catch {
+    } catch (e: any) {
       setOfflineMode(true);
+      alert(`Supabase Error: ${e.message || 'Could not save settings'}. Changes saved locally in this browser.`);
     }
   };
 
@@ -317,13 +321,15 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     setHeaderSettingsState(settings);
     writeLocalJson("shop_header_settings", settings);
     try {
-      await supabase.from('settings').upsert({
+      const { error } = await supabase.from('settings').upsert({
           key: 'header_settings',
           value: JSON.stringify(settings)
       });
+      if (error) throw error;
       setOfflineMode(false);
-    } catch {
+    } catch (e: any) {
       setOfflineMode(true);
+      alert(`Supabase Error: ${e.message || 'Could not save header'}. Changes saved locally in this browser.`);
     }
   };
 
@@ -331,13 +337,15 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     setPaymentSettingsState(settings);
     writeLocalJson("shop_payment_settings", settings);
     try {
-      await supabase.from('settings').upsert({
+      const { error } = await supabase.from('settings').upsert({
           key: 'payment_settings',
           value: JSON.stringify(settings)
       });
+      if (error) throw error;
       setOfflineMode(false);
-    } catch {
+    } catch (e: any) {
       setOfflineMode(true);
+      alert(`Supabase Error: ${e.message || 'Could not save payment settings'}. Changes saved locally in this browser.`);
     }
   };
 
@@ -345,13 +353,15 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     setThemeSettingsState(settings);
     writeLocalJson("shop_theme_settings", settings);
     try {
-      await supabase.from('settings').upsert({
+      const { error } = await supabase.from('settings').upsert({
           key: 'theme_settings',
           value: JSON.stringify(settings)
       });
+      if (error) throw error;
       setOfflineMode(false);
-    } catch {
+    } catch (e: any) {
       setOfflineMode(true);
+      alert(`Supabase Error: ${e.message || 'Could not save theme'}. Changes saved locally in this browser.`);
     }
   };
 

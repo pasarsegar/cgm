@@ -250,7 +250,7 @@ export default function AdminPages() {
                               type: "text",
                               content: {
                                 noContainer: true,
-                                html: `<div class="space-y-6"><a href="/" class="flex items-center"><span class="text-2xl font-black italic" style="color: var(--footer-text)">LCP<span class="text-primary">AUTO</span></span></a><p class="text-sm leading-relaxed opacity-70">Your premier partner for high-performance automotive tuning and premium car parts. Based in Jakarta, serving enthusiasts worldwide.</p><div class="flex items-center space-x-4"><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">IG</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">FB</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">X</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">YT</a></div></div>`
+                                html: `<div class="space-y-6"><a href="/" class="flex items-center"><span class="text-2xl font-black italic" style="color: var(--footer-text)">CGM<span class="text-primary">scale</span></span></a><p class="text-sm leading-relaxed opacity-70">Your premier partner for high-precision industrial scaling solutions and measurement systems. Based in Jakarta, serving industries worldwide.</p><div class="flex items-center space-x-4"><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">IG</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">FB</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">X</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">YT</a></div></div>`
                               }
                             }
                           ],
@@ -260,7 +260,7 @@ export default function AdminPages() {
                               type: "text",
                               content: {
                                 noContainer: true,
-                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4><ul class="space-y-3 text-sm opacity-70"><li><a href="/shop" class="hover:opacity-100 transition-opacity">Shop All Parts</a></li><li><a href="/tuning" class="hover:opacity-100 transition-opacity">Tuning Services</a></li><li><a href="/about" class="hover:opacity-100 transition-opacity">Our Story</a></li><li><a href="/contact" class="hover:opacity-100 transition-opacity">Contact Support</a></li><li><a href="/shipping" class="hover:opacity-100 transition-opacity">Shipping &amp; Returns</a></li></ul></div>`
+                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4><ul class="space-y-3 text-sm opacity-70"><li><a href="/" class="hover:opacity-100 transition-opacity">Home</a></li><li><a href="/about" class="hover:opacity-100 transition-opacity">About Us</a></li><li><a href="/gallery" class="hover:opacity-100 transition-opacity">Gallery</a></li><li><a href="/our-services" class="hover:opacity-100 transition-opacity">Our Services</a></li><li><a href="/contact" class="hover:opacity-100 transition-opacity">Contact Us</a></li></ul></div>`
                               }
                             }
                           ],
@@ -270,7 +270,7 @@ export default function AdminPages() {
                               type: "text",
                               content: {
                                 noContainer: true,
-                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Contact Us</h4><ul class="space-y-4 text-sm opacity-70"><li>Jl. Sudirman No. 45, Jakarta Selatan, 12190</li><li>+62 21 555 1234</li><li>info@lcpautocars.com</li></ul></div>`
+                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Contact Us</h4><ul class="space-y-4 text-sm opacity-70"><li>Industrial Area, Jakarta Selatan, 12190</li><li>+62 21 555 1234</li><li>info@cgmscale.com</li></ul></div>`
                               }
                             }
                           ],
@@ -280,7 +280,7 @@ export default function AdminPages() {
                               type: "text",
                               content: {
                                 noContainer: true,
-                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4><p class="text-sm opacity-70">Subscribe to get latest tuning news and special offers.</p><div class="flex space-x-2"><input type="email" placeholder="Your email" class="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50" /><button class="px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20" style="background-color: var(--footer-button-bg); color: var(--footer-button-text);">Join</button></div></div>`
+                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4><p class="text-sm opacity-70">Subscribe to get latest industry news and special offers.</p><div class="flex space-x-2"><input type="email" placeholder="Your email" class="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50" /><button class="px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20" style="background-color: var(--footer-button-bg); color: var(--footer-button-text);">Join</button></div></div>`
                               }
                             }
                           ]
@@ -292,7 +292,7 @@ export default function AdminPages() {
                       type: "text",
                       content: {
                         noContainer: true,
-                        html: `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold"><p>© 2024 LCP AUTO CARS. ALL RIGHTS RESERVED.</p><div class="flex space-x-6"><a href="/privacy" class="hover:opacity-100">Privacy Policy</a><a href="/terms" class="hover:opacity-100">Terms of Service</a></div></div>`
+                        html: `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold"><p>© 2026 CGMSCALE. ALL RIGHTS RESERVED.</p><div class="flex space-x-6"><a href="/privacy" class="hover:opacity-100">Privacy Policy</a><a href="/terms" class="hover:opacity-100">Terms of Service</a></div></div>`
                       }
                     }
                   ])
@@ -412,7 +412,7 @@ export default function AdminPages() {
       };
       upsertLocalPage(localPage);
       setOfflineMode(true);
-      alert('Supabase not reachable. Saved locally in this browser.');
+      alert(`Supabase Error: ${error.message || 'Unknown error'}. Saved locally in this browser.`);
     } else {
       const localPage: Page = {
         id: savedId,

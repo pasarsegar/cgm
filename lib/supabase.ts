@@ -10,8 +10,8 @@ function getConfig() {
     const localUrl = window.localStorage.getItem("supabase_url");
     const localKey = window.localStorage.getItem("supabase_anon_key");
     return {
-      url: localUrl || envUrl,
-      key: localKey || envKey,
+      url: envUrl || localUrl,
+      key: envKey || localKey,
     };
   }
 

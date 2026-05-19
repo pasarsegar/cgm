@@ -46,15 +46,19 @@ export default function RevSlider() {
           {/* Content */}
           <div className={cn(
             "relative h-full max-w-7xl mx-auto px-6 sm:px-12 flex flex-col justify-center text-white",
-            slide.buttonPosition === 'center' ? 'items-center text-center' :
-            slide.buttonPosition === 'right' ? 'items-end text-right' :
-            'items-start text-left'
+            // Always center on mobile, use slide settings on desktop
+            "items-center text-center md:items-start md:text-left",
+            slide.buttonPosition === 'center' ? 'md:items-center md:text-center' :
+            slide.buttonPosition === 'right' ? 'md:items-end md:text-right' :
+            'md:items-start md:text-left'
           )}>
             <div className={cn(
               "space-y-4 md:space-y-6 max-w-2xl transform transition-all duration-700 delay-300",
               index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
-              slide.buttonPosition === 'center' ? 'flex flex-col items-center' :
-              slide.buttonPosition === 'right' ? 'flex flex-col items-end' :
+              // Layout adjustments for alignment
+              "flex flex-col items-center md:items-start",
+              slide.buttonPosition === 'center' ? 'md:flex flex-col md:items-center' :
+              slide.buttonPosition === 'right' ? 'md:flex flex-col md:items-end' :
               ''
             )}>
               <span className="text-primary font-black text-[10px] md:text-xs uppercase tracking-[0.3em]">
@@ -66,7 +70,7 @@ export default function RevSlider() {
               <p className="text-gray-300 text-sm md:text-lg max-w-xl leading-relaxed line-clamp-3 md:line-clamp-none">
                 {slide.description}
               </p>
-              <div className="pt-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="pt-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full md:w-auto">
                 <a 
                   href={slide.buttonLink}
                   className="w-full sm:w-auto bg-primary text-white px-8 py-3 md:py-4 text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 flex items-center justify-center group/btn"

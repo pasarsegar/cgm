@@ -178,7 +178,24 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
       );
     }
 
-    case "button":
+    case "button": {
+      const isExternal = block.content.url?.startsWith('http') || block.content.url?.startsWith('wa.me') || block.content.url?.startsWith('tel:');
+      
+      if (isExternal) {
+        return (
+          <div className={`container mx-auto px-4 py-4 text-${block.content.alignment || "left"}`}>
+            <a
+              href={block.content.url.startsWith('wa.me') ? `https://${block.content.url}` : block.content.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-primary text-white px-6 py-3 rounded font-bold uppercase tracking-wider hover:opacity-90 transition-all"
+            >
+              {block.content.text}
+            </a>
+          </div>
+        );
+      }
+
       return (
         <div className={`container mx-auto px-4 py-4 text-${block.content.alignment || "left"}`}>
           <Link
@@ -189,6 +206,7 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
           </Link>
         </div>
       );
+    }
 
     case "columns": {
       const columns: BuilderBlock[][] = block.content.columns || [[], [], [], []];

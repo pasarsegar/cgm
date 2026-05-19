@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useShop } from "@/context/ShopContext";
-import { Save, Loader2, RotateCcw } from "lucide-react";
+import { Save, Loader2, RotateCcw, Upload } from "lucide-react";
 
 export default function AdminTheme() {
   const { themeSettings, setThemeSettings, headerSettings, setHeaderSettings } = useShop();
@@ -68,13 +68,36 @@ export default function AdminTheme() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Logo URL</label>
-                <input 
-                    type="text" 
-                    value={headerSettings.logoUrl || ''}
-                    onChange={(e) => updateHeaderSettings({ logoUrl: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm"
-                    placeholder="https://example.com/logo.png"
-                />
+                <div className="flex gap-2">
+                    <input 
+                        type="text" 
+                        value={headerSettings.logoUrl || ''}
+                        onChange={(e) => updateHeaderSettings({ logoUrl: e.target.value })}
+                        className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-primary font-mono text-sm"
+                        placeholder="https://example.com/logo.png"
+                    />
+                    <button 
+                        onClick={() => document.getElementById('logo-upload')?.click()}
+                        className="bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-gray-200 flex items-center gap-2 uppercase tracking-widest whitespace-nowrap"
+                    >
+                        <Upload className="w-4 h-4" />
+                        Upload
+                    </button>
+                    <input 
+                        id="logo-upload"
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => updateHeaderSettings({ logoUrl: reader.result as string });
+                                reader.readAsDataURL(file);
+                            }
+                        }}
+                    />
+                </div>
                 <p className="text-xs text-gray-400 mt-2">Leave empty to use Site Title.</p>
             </div>
             <div>

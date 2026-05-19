@@ -223,7 +223,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed opacity-70">
-              Your premier partner for high-performance automotive tuning and premium car parts. Based in Jakarta, serving enthusiasts worldwide.
+              Your premier partner for high-precision industrial scaling solutions and measurement systems. Based in Jakarta, serving industries worldwide.
             </p>
             <div className="flex items-center space-x-4">
               <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Instagram className="w-4 h-4" /></Link>
@@ -237,11 +237,11 @@ export default function Footer() {
           <div className="space-y-6">
             <h4 className="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4>
             <ul className="space-y-3 text-sm opacity-70">
-              <li><Link href="/shop" className="hover:opacity-100 transition-opacity">Shop All Parts</Link></li>
-              <li><Link href="/tuning" className="hover:opacity-100 transition-opacity">Tuning Services</Link></li>
-              <li><Link href="/about" className="hover:opacity-100 transition-opacity">Our Story</Link></li>
-              <li><Link href="/contact" className="hover:opacity-100 transition-opacity">Contact Support</Link></li>
-              <li><Link href="/shipping" className="hover:opacity-100 transition-opacity">Shipping & Returns</Link></li>
+              <li><Link href="/" className="hover:opacity-100 transition-opacity">Home</Link></li>
+              <li><Link href="/about" className="hover:opacity-100 transition-opacity">About Us</Link></li>
+              <li><Link href="/gallery" className="hover:opacity-100 transition-opacity">Gallery</Link></li>
+              <li><Link href="/our-services" className="hover:opacity-100 transition-opacity">Our Services</Link></li>
+              <li><Link href="/contact" className="hover:opacity-100 transition-opacity">Contact Us</Link></li>
             </ul>
           </div>
 
@@ -251,7 +251,7 @@ export default function Footer() {
             <ul className="space-y-4 text-sm opacity-70">
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-                <span>Jl. Sudirman No. 45, Jakarta Selatan, 12190</span>
+                <span>Industrial Area, Jakarta Selatan, 12190</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-primary flex-shrink-0" />
@@ -259,7 +259,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-                <span>info@lcpautocars.com</span>
+                <span>info@cgmscale.com</span>
               </li>
             </ul>
           </div>
@@ -267,7 +267,7 @@ export default function Footer() {
           {/* Column 4: Newsletter */}
           <div className="space-y-6">
             <h4 className="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4>
-            <p className="text-sm opacity-70">Subscribe to get latest tuning news and special offers.</p>
+            <p className="text-sm opacity-70">Subscribe to get latest industry news and special offers.</p>
             <form className="flex space-x-2">
               <input 
                 type="email" 

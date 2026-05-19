@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { BuilderBlock, initialBlockContent, BlockType } from './types';
-import { GripVertical, Trash2, ChevronDown, ChevronUp, Edit3, Eye, ShoppingBag, Copy, Image as ImageIcon } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronUp, Edit3, Eye, ShoppingBag, Copy, Image as ImageIcon, Upload } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import BlockPreview from './BlockPreview';
 import { supabase } from '@/lib/supabase';
@@ -820,13 +820,36 @@ export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }
                                                 />
                                             )}
                                             {subBlock.type === 'image' && (
-                                                <input 
-                                                    type="text"
-                                                    className="w-full text-xs border rounded p-1"
-                                                    placeholder="Image URL"
-                                                    value={subBlock.content.url}
-                                                    onChange={(e) => updateBlockInColumn(colIndex, subBlock.id, { ...subBlock.content, url: e.target.value })}
-                                                />
+                                                <div className="flex gap-1">
+                                                    <input 
+                                                        type="text"
+                                                        className="flex-1 text-xs border rounded p-1"
+                                                        placeholder="Image URL"
+                                                        value={subBlock.content.url}
+                                                        onChange={(e) => updateBlockInColumn(colIndex, subBlock.id, { ...subBlock.content, url: e.target.value })}
+                                                    />
+                                                    <button 
+                                                        onClick={() => document.getElementById(`upload-${subBlock.id}`)?.click()}
+                                                        className="p-1 bg-gray-50 border rounded hover:bg-gray-100 text-gray-500"
+                                                        title="Upload Image"
+                                                    >
+                                                        <Upload className="w-3 h-3" />
+                                                    </button>
+                                                    <input 
+                                                        id={`upload-${subBlock.id}`}
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => updateBlockInColumn(colIndex, subBlock.id, { ...subBlock.content, url: reader.result as string });
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
                                             )}
                                             {subBlock.type === 'button' && (
                                                 <div className="space-y-1">

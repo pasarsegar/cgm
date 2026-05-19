@@ -17,7 +17,15 @@ import {
   MousePointer2,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  Phone,
+  Mail,
+  Instagram,
+  Facebook,
+  Twitter,
+  Youtube,
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Widget, WidgetArea } from "@/lib/types";
@@ -49,6 +57,8 @@ const availableWidgets: { type: Widget['type']; name: string; icon: any; desc: s
   { type: 'custom_html', name: 'Custom HTML', icon: Code, desc: 'Arbitrary HTML code.' },
   { type: 'text', name: 'Text', icon: FileText, desc: 'Arbitrary text or HTML.' },
   { type: 'image', name: 'Image', icon: ImageIcon, desc: 'Displays an image.' },
+  { type: 'contact_info', name: 'Contact Info', icon: MapPin, desc: 'Address, phone, and email.' },
+  { type: 'social_links', name: 'Social Links', icon: Share2, desc: 'Social media icons and links.' },
 ];
 
 function SortableWidget({ 
@@ -165,6 +175,83 @@ function SortableWidget({
                   value={widget.settings.link || ""}
                   onChange={(e) => updateWidget({ settings: { ...widget.settings, link: e.target.value } })}
                   placeholder="https://..."
+                />
+              </div>
+            </div>
+          )}
+          {widget.type === 'contact_info' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Address</label>
+                <textarea
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1] h-20 resize-none"
+                  value={widget.settings.address || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, address: e.target.value } })}
+                  placeholder="Street address..."
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Phone</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.phone || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, phone: e.target.value } })}
+                  placeholder="+62 ..."
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Email</label>
+                <input
+                  type="email"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.email || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, email: e.target.value } })}
+                  placeholder="info@..."
+                />
+              </div>
+            </div>
+          )}
+          {widget.type === 'social_links' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Instagram URL</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.instagram || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, instagram: e.target.value } })}
+                  placeholder="https://instagram.com/..."
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Facebook URL</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.facebook || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, facebook: e.target.value } })}
+                  placeholder="https://facebook.com/..."
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Twitter/X URL</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.twitter || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, twitter: e.target.value } })}
+                  placeholder="https://twitter.com/..."
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-600 font-bold">Youtube URL</label>
+                <input
+                  type="text"
+                  className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                  value={widget.settings.youtube || ""}
+                  onChange={(e) => updateWidget({ settings: { ...widget.settings, youtube: e.target.value } })}
+                  placeholder="https://youtube.com/..."
                 />
               </div>
             </div>

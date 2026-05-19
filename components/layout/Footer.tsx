@@ -9,7 +9,7 @@ import parse from "html-react-parser";
 import { useAdmin } from "@/lib/admin-context";
 import { useShop } from "@/context/ShopContext";
 
-type WidgetType = "search" | "recent_posts" | "categories" | "custom_html" | "text" | "image";
+type WidgetType = "search" | "recent_posts" | "categories" | "custom_html" | "text" | "image" | "contact_info" | "social_links";
 type FooterWidget = {
   id: string;
   type: WidgetType;
@@ -155,6 +155,50 @@ export default function Footer() {
                           />
                         )
                       ) : null
+                    ) : widget.type === "contact_info" ? (
+                      <ul className="space-y-4 text-sm opacity-70">
+                        {widget.settings.address && (
+                          <li className="flex items-start space-x-3">
+                            <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+                            <span>{widget.settings.address}</span>
+                          </li>
+                        )}
+                        {widget.settings.phone && (
+                          <li className="flex items-center space-x-3">
+                            <Phone className="w-5 h-5 text-primary flex-shrink-0" />
+                            <span>{widget.settings.phone}</span>
+                          </li>
+                        )}
+                        {widget.settings.email && (
+                          <li className="flex items-center space-x-3">
+                            <Mail className="w-5 h-5 text-primary flex-shrink-0" />
+                            <span>{widget.settings.email}</span>
+                          </li>
+                        )}
+                      </ul>
+                    ) : widget.type === "social_links" ? (
+                      <div className="flex items-center space-x-4">
+                        {widget.settings.instagram && (
+                          <Link href={widget.settings.instagram} target="_blank" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">
+                            <Instagram className="w-4 h-4" />
+                          </Link>
+                        )}
+                        {widget.settings.facebook && (
+                          <Link href={widget.settings.facebook} target="_blank" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">
+                            <Facebook className="w-4 h-4" />
+                          </Link>
+                        )}
+                        {widget.settings.twitter && (
+                          <Link href={widget.settings.twitter} target="_blank" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">
+                            <Twitter className="w-4 h-4" />
+                          </Link>
+                        )}
+                        {widget.settings.youtube && (
+                          <Link href={widget.settings.youtube} target="_blank" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">
+                            <Youtube className="w-4 h-4" />
+                          </Link>
+                        )}
+                      </div>
                     ) : widget.type === "search" ? (
                       <form action="/search" className="flex space-x-2">
                         <input

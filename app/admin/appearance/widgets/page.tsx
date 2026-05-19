@@ -57,6 +57,7 @@ const availableWidgets: { type: Widget['type']; name: string; icon: any; desc: s
   { type: 'custom_html', name: 'Custom HTML', icon: Code, desc: 'Arbitrary HTML code.' },
   { type: 'text', name: 'Text', icon: FileText, desc: 'Arbitrary text or HTML.' },
   { type: 'image', name: 'Image', icon: ImageIcon, desc: 'Displays an image.' },
+  { type: 'nav_menu', name: 'Navigation Menu', icon: List, desc: 'Add a navigation menu to your area.' },
   { type: 'contact_info', name: 'Contact Info', icon: MapPin, desc: 'Address, phone, and email.' },
   { type: 'social_links', name: 'Social Links', icon: Share2, desc: 'Social media icons and links.' },
 ];
@@ -66,13 +67,15 @@ function SortableWidget({
   expanded, 
   toggleExpand, 
   removeWidget, 
-  updateWidget 
+  updateWidget,
+  availableMenus = []
 }: { 
   widget: Widget; 
   expanded: boolean; 
   toggleExpand: () => void; 
   removeWidget: () => void;
   updateWidget: (updated: Partial<Widget>) => void;
+  availableMenus?: any[];
 }) {
   const {
     attributes,
@@ -179,6 +182,21 @@ function SortableWidget({
               </div>
             </div>
           )}
+          {widget.type === 'nav_menu' && (
+            <div>
+              <label className="block mb-1 text-gray-600 font-bold">Select Menu</label>
+              <select 
+                className="w-full border border-[#ccd0d4] px-2 py-1.5 outline-none focus:border-[#2271b1]"
+                value={widget.settings.menuId || ""}
+                onChange={(e) => updateWidget({ settings: { ...widget.settings, menuId: e.target.value } })}
+              >
+                <option value="">— Select —</option>
+                {availableMenus.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           {widget.type === 'contact_info' && (
             <div className="space-y-3">
               <div>
@@ -273,6 +291,7 @@ function SortableWidget({
 
 export default function AdminWidgets() {
   const [widgetAreas, setWidgetAreas] = useState<WidgetArea[]>([]);
+  const [availableMenus, setAvailableMenus] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedWidgets, setExpandedWidgets] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -334,7 +353,17 @@ export default function AdminWidgets() {
 
   useEffect(() => {
     fetchWidgetAreas();
+    fetchMenus();
   }, []);
+
+  const fetchMenus = async () => {
+    try {
+      const { data } = await supabase.from('menus').select('*').order('name');
+      setAvailableMenus(data || []);
+    } catch (err) {
+      console.error('Error fetching menus:', err);
+    }
+  };
 
   const fetchWidgetAreas = async () => {
     setLoading(true);
@@ -664,6 +693,7 @@ export default function AdminWidgets() {
                                                     toggleExpand={() => toggleWidget(widget.id)}
                                                     removeWidget={() => removeWidget(area.id, widget.id)}
                                                     updateWidget={(updated) => updateWidget(area.id, widget.id, updated)}
+                                                    availableMenus={availableMenus}
                                                 />
                                                 {expandedWidgets.includes(widget.id) && (
                                                     <div className="flex justify-end px-4 pb-4 bg-white border-x border-b border-[#ccd0d4] -mt-0.5">

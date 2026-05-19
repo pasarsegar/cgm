@@ -8,8 +8,9 @@ import BuilderRendererLite from "@/components/builder/BuilderRendererLite";
 import parse from "html-react-parser";
 import { useAdmin } from "@/lib/admin-context";
 import { useShop } from "@/context/ShopContext";
+import { MenuItem } from "@/lib/types";
 
-type WidgetType = "search" | "recent_posts" | "categories" | "custom_html" | "text" | "image" | "contact_info" | "social_links";
+type WidgetType = "search" | "recent_posts" | "categories" | "custom_html" | "text" | "image" | "contact_info" | "social_links" | "nav_menu";
 type FooterWidget = {
   id: string;
   type: WidgetType;
@@ -29,6 +30,25 @@ export default function Footer() {
   const { themeSettings } = useShop();
   const [footerContent, setFooterContent] = useState<string>("");
   const [footerWidgetAreas, setFooterWidgetAreas] = useState<FooterWidgetArea[]>([]);
+  const [menus, setMenus] = useState<Record<string, MenuItem[]>>({});
+
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const { data } = await supabase.from('menus').select('*');
+        if (data) {
+          const menuMap: Record<string, MenuItem[]> = {};
+          data.forEach((m: any) => {
+            menuMap[m.id] = m.items || [];
+          });
+          setMenus(menuMap);
+        }
+      } catch (err) {
+        console.error('Error fetching menus for footer:', err);
+      }
+    };
+    fetchMenus();
+  }, []);
 
   useEffect(() => {
     const fetchFooter = async () => {
@@ -199,6 +219,16 @@ export default function Footer() {
                           </Link>
                         )}
                       </div>
+                    ) : widget.type === "nav_menu" ? (
+                      <ul className="space-y-3 text-sm opacity-70">
+                        {(menus[widget.settings.menuId] || []).map((item) => (
+                          <li key={item.id}>
+                            <Link href={item.url || "#"} className="hover:opacity-100 transition-opacity">
+                              {item.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
                     ) : widget.type === "search" ? (
                       <form action="/search" className="flex space-x-2">
                         <input

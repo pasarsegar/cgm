@@ -49,7 +49,7 @@ export interface Product {
 
 export interface Widget {
   id: string;
-  type: 'search' | 'recent_posts' | 'categories' | 'custom_html' | 'text' | 'image' | 'contact_info' | 'social_links';
+  type: 'search' | 'recent_posts' | 'categories' | 'custom_html' | 'text' | 'image' | 'contact_info' | 'social_links' | 'nav_menu';
   title: string;
   settings: Record<string, any>;
 }

@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { BuilderBlock } from './types';
 import parse from 'html-react-parser';
 import Link from 'next/link';
@@ -108,9 +109,15 @@ export default async function BuilderRenderer({ content }: BuilderRendererProps)
   const blocksWithData = await enrichBlocksWithData(blocks);
 
   return (
-    <div className="builder-content">
+    <div className="builder-content w-full">
       {blocksWithData.map((block) => (
-        <div key={block.id} className="builder-block">
+        <div 
+          key={block.id} 
+          className={cn(
+            "builder-block w-full",
+            block.type === 'slider' ? "max-w-none px-0" : ""
+          )}
+        >
           {renderBlock(block)}
         </div>
       ))}

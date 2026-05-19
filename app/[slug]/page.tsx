@@ -71,7 +71,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
       <Header />
       
       {/* Page Content */}
-      <div className="flex-1">
+      <div className="flex-1 w-full">
           {(slug === 'hardware-licence' || slug === 'custom-tunes' || slug === 'dealers' || showProducts) ? (
             <>
               {/* Hero Section */}
@@ -82,7 +82,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
               </div>
               
               {/* Page Body */}
-              <div className="flex-1">
+              <div className="flex-1 w-full">
                   {content && content.trim().startsWith('[') ? (
                       <BuilderRenderer content={content} />
                   ) : (
@@ -95,7 +95,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
               </div>
             </>
           ) : (
-              <div className="flex-1">
+              <div className="flex-1 w-full">
                   {content && content.trim().startsWith('[') ? (
                       <BuilderRenderer content={content} />
                   ) : (

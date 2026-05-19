@@ -4,6 +4,7 @@ import { BuilderBlock } from "./types";
 import parse from "html-react-parser";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import RevSlider from "@/components/home/RevSlider";
 
 export default function BuilderRendererLite({ content }: { content: string }) {
   let blocks: BuilderBlock[] = [];
@@ -19,9 +20,15 @@ export default function BuilderRendererLite({ content }: { content: string }) {
   if (!blocks || blocks.length === 0) return null;
 
   return (
-    <div className="builder-content">
+    <div className="builder-content w-full">
       {blocks.map((block) => (
-        <div key={block.id} className="builder-block">
+        <div 
+          key={block.id} 
+          className={cn(
+            "builder-block w-full",
+            block.type === 'slider' ? "max-w-none px-0" : ""
+          )}
+        >
           {renderBlock(block)}
         </div>
       ))}
@@ -207,6 +214,9 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
         </div>
       );
     }
+
+    case "slider":
+      return <RevSlider />;
 
     case "columns": {
       const columns: BuilderBlock[][] = block.content.columns || [[], [], [], []];

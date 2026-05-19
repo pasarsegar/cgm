@@ -41,7 +41,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-background-shade">
       <Header />
-      <div className="flex-grow">
+      <div className="flex-grow w-full">
         {homePage ? (
             homePage.content && homePage.content.trim().startsWith('[') ? (
                 <BuilderRenderer content={homePage.content} />

@@ -88,14 +88,14 @@ export default function Footer() {
         const { data: areas, error: areasError } = await supabase
           .from("widget_areas")
           .select("*")
-          .in("id", ["footer-1", "footer-2", "footer-3", "footer-4"])
-          .order("name");
+          .ilike("id", "footer-%")
+          .order("id");
         if (areasError) throw areasError;
 
         const { data: widgets, error: widgetsError } = await supabase
           .from("widgets")
           .select("*")
-          .in("area_id", ["footer-1", "footer-2", "footer-3", "footer-4"])
+          .ilike("area_id", "footer-%")
           .order("order");
         if (widgetsError) throw widgetsError;
 
@@ -120,20 +120,9 @@ export default function Footer() {
     fetchFooterWidgets();
   }, []);
 
-  if (footerContent) {
-    return (
-      <footer style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
-        {footerContent.trim().startsWith("[") ? (
-          <BuilderRendererLite content={footerContent} />
-        ) : (
-          <>{parse(footerContent)}</>
-        )}
-      </footer>
-    );
-  }
-
   const hasFooterWidgets = footerWidgetAreas.some((a) => (a.widgets || []).length > 0);
 
+  // If we have widgets, prioritize them
   if (hasFooterWidgets) {
     return (
       <footer className="pt-16 pb-8" style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
@@ -206,6 +195,19 @@ export default function Footer() {
             </div>
           </div>
         </div>
+      </footer>
+    );
+  }
+
+  // If no widgets, check for builder content
+  if (footerContent) {
+    return (
+      <footer style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
+        {footerContent.trim().startsWith("[") ? (
+          <BuilderRendererLite content={footerContent} />
+        ) : (
+          <>{parse(footerContent)}</>
+        )}
       </footer>
     );
   }

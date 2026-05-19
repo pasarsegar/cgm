@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import BuilderEditor from "@/components/builder/BuilderEditor";
 import { 
@@ -34,10 +34,19 @@ interface Page {
 }
 
 export default function AdminPages() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" /></div>}>
+      <AdminPagesContent />
+    </Suspense>
+  );
+}
+
+function AdminPagesContent() {
   const router = useRouter();
-  const [action, setAction] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [urlSlug, setUrlSlug] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const action = searchParams.get("action");
+  const editId = searchParams.get("edit");
+  const urlSlug = searchParams.get("slug");
   
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,54 +103,33 @@ export default function AdminPages() {
   const [useBuilder, setUseBuilder] = useState(false);
 
   useEffect(() => {
-    const updateFromLocation = () => {
-      const params = new URLSearchParams(window.location.search);
-      setAction(params.get("action"));
-      setEditId(params.get("edit"));
-      setUrlSlug(params.get("slug"));
-    };
-
-    updateFromLocation();
-
-    const onPopState = () => updateFromLocation();
-    window.addEventListener("popstate", onPopState);
-
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-
-    history.pushState = function (this: any, ...args: any[]) {
-      originalPushState.apply(this, args as any);
-      updateFromLocation();
-    } as any;
-
-    history.replaceState = function (this: any, ...args: any[]) {
-      originalReplaceState.apply(this, args as any);
-      updateFromLocation();
-    } as any;
-
-    return () => {
-      window.removeEventListener("popstate", onPopState);
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-    };
-  }, []);
-
-  useEffect(() => {
     fetchPages();
   }, []);
 
   useEffect(() => {
+    // Determine what data to show based on URL
     if (action === "edit" && editId) {
       const pageToEdit = pages.find(p => p.id === editId);
       if (pageToEdit) {
         setFormData(pageToEdit);
+        setUseBuilder(pageToEdit.content?.trim().startsWith('[') || false);
+      }
+    } else if (action === "new") {
+        const isHome = urlSlug === 'home';
+        const isSiteHeader = urlSlug === 'site-header';
+        const isSiteFooter = urlSlug === 'site-footer';
         
-        // Auto-detect if content is JSON builder format
-        if (pageToEdit.content && pageToEdit.content.trim().startsWith('[')) {
-            setUseBuilder(true);
-        } else if (pageToEdit.slug === 'home' && (!pageToEdit.content || pageToEdit.content.trim() === '')) {
-            // Special case for Home: if it exists but is empty/legacy, default to builder
-            setUseBuilder(true);
+        // Default new page state
+        setFormData({
+            title: urlSlug ? urlSlug.charAt(0).toUpperCase() + urlSlug.slice(1).replace("-", " ") : "",
+            slug: urlSlug || "",
+            content: "",
+            status: isHome || isSiteHeader || isSiteFooter ? "publish" : "draft"
+        });
+        setUseBuilder(true);
+
+        // Pre-fill content for special slugs
+        if (isHome) {
             const defaultHomeContent = JSON.stringify([
                 {
                     id: crypto.randomUUID(),
@@ -154,166 +142,38 @@ export default function AdminPages() {
                     content: { 
                         type: '3-col',
                         columns: [
-                            [
-                                {
-                                    id: crypto.randomUUID(),
-                                    type: 'product',
-                                    content: { productId: "", showTitle: true, showPrice: true, showButton: true }
-                                }
-                            ],
-                            [
-                                {
-                                    id: crypto.randomUUID(),
-                                    type: 'product',
-                                    content: { productId: "", showTitle: true, showPrice: true, showButton: true }
-                                }
-                            ],
-                            [
-                                {
-                                    id: crypto.randomUUID(),
-                                    type: 'product',
-                                    content: { productId: "", showTitle: true, showPrice: true, showButton: true }
-                                }
-                            ]
+                            [{ id: crypto.randomUUID(), type: 'product', content: { productId: "", showTitle: true, showPrice: true, showButton: true } }],
+                            [{ id: crypto.randomUUID(), type: 'product', content: { productId: "", showTitle: true, showPrice: true, showButton: true } }],
+                            [{ id: crypto.randomUUID(), type: 'product', content: { productId: "", showTitle: true, showPrice: true, showButton: true } }]
                         ]
                     }
                 }
             ]);
             setFormData(prev => ({ ...prev, content: defaultHomeContent }));
-        }
-      }
-    } else if (action === "new") {
-        const isHome = urlSlug === 'home';
-        const isSiteHeader = urlSlug === 'site-header';
-        const isSiteFooter = urlSlug === 'site-footer';
-        // If creating Home page, pre-fill with Slider block and 3-Col Product Grid
-        const initialContent = isHome 
-            ? JSON.stringify([
+        } else if (isSiteHeader) {
+            setFormData(prev => ({ ...prev, title: "Site Header", content: JSON.stringify([{ id: crypto.randomUUID(), type: "text", content: { noContainer: true, html: `<div class="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] text-center uppercase tracking-widest font-bold">Free Shipping on all Tuning Parts over $500</div>` } }]) }));
+        } else if (isSiteFooter) {
+            setFormData(prev => ({ ...prev, title: "Site Footer", content: JSON.stringify([
                 {
                     id: crypto.randomUUID(),
-                    type: 'slider',
-                    content: { alias: 'home-slider' }
-                },
-                {
-                    id: crypto.randomUUID(),
-                    type: 'columns',
-                    content: { 
-                        type: '3-col',
-                        columns: [
-                            [
-                                {
-                                    id: crypto.randomUUID(),
-                                    type: 'product',
-                                    content: { productId: "", showTitle: true, showPrice: true, showButton: true }
-                                }
-                            ],
-                            [
-                                {
-                                    id: crypto.randomUUID(),
-                                    type: 'product',
-                                    content: { productId: "", showTitle: true, showPrice: true, showButton: true }
-                                }
-                            ],
-                            [
-                                {
-                                    id: crypto.randomUUID(),
-                                    type: 'product',
-                                    content: { productId: "", showTitle: true, showPrice: true, showButton: true }
-                                }
-                            ]
-                        ]
-                    }
-                }
-            ])
-            : isSiteHeader
-              ? JSON.stringify([
-                  {
-                    id: crypto.randomUUID(),
-                    type: "text",
+                    type: "columns",
                     content: {
-                      noContainer: true,
-                      html: `<div class="bg-[#1d2327] text-white py-1.5 px-4 text-[11px] text-center uppercase tracking-widest font-bold">Free Shipping on all Tuning Parts over $500</div>`
-                    }
-                  }
-                ])
-              : isSiteFooter
-                ? JSON.stringify([
-                    {
-                      id: crypto.randomUUID(),
-                      type: "columns",
-                      content: {
                         type: "4-col",
                         columns: [
-                          [
-                            {
-                              id: crypto.randomUUID(),
-                              type: "text",
-                              content: {
-                                noContainer: true,
-                                html: `<div class="space-y-6"><a href="/" class="flex items-center"><span class="text-2xl font-black italic" style="color: var(--footer-text)">CGM<span class="text-primary">scale</span></span></a><p class="text-sm leading-relaxed opacity-70">Your premier partner for high-precision industrial scaling solutions and measurement systems. Based in Jakarta, serving industries worldwide.</p><div class="flex items-center space-x-4"><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">IG</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">FB</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">X</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">YT</a></div></div>`
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              id: crypto.randomUUID(),
-                              type: "text",
-                              content: {
-                                noContainer: true,
-                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4><ul class="space-y-3 text-sm opacity-70"><li><a href="/" class="hover:opacity-100 transition-opacity">Home</a></li><li><a href="/about" class="hover:opacity-100 transition-opacity">About Us</a></li><li><a href="/gallery" class="hover:opacity-100 transition-opacity">Gallery</a></li><li><a href="/our-services" class="hover:opacity-100 transition-opacity">Our Services</a></li><li><a href="/contact" class="hover:opacity-100 transition-opacity">Contact Us</a></li></ul></div>`
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              id: crypto.randomUUID(),
-                              type: "text",
-                              content: {
-                                noContainer: true,
-                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Contact Us</h4><ul class="space-y-4 text-sm opacity-70"><li>Industrial Area, Jakarta Selatan, 12190</li><li>+62 21 555 1234</li><li>info@cgmscale.com</li></ul></div>`
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              id: crypto.randomUUID(),
-                              type: "text",
-                              content: {
-                                noContainer: true,
-                                html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4><p class="text-sm opacity-70">Subscribe to get latest industry news and special offers.</p><div class="flex space-x-2"><input type="email" placeholder="Your email" class="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50" /><button class="px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20" style="background-color: var(--footer-button-bg); color: var(--footer-button-text);">Join</button></div></div>`
-                              }
-                            }
-                          ]
+                            [{ id: crypto.randomUUID(), type: "text", content: { noContainer: true, html: `<div class="space-y-6"><a href="/" class="flex items-center"><span class="text-2xl font-black italic" style="color: var(--footer-text)">CGM<span class="text-primary">scale</span></span></a><p class="text-sm leading-relaxed opacity-70">Your premier partner for high-precision industrial scaling solutions and measurement systems. Based in Jakarta, serving industries worldwide.</p><div class="flex items-center space-x-4"><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">IG</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">FB</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">X</a><a href="#" class="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current">YT</a></div></div>` } }],
+                            [{ id: crypto.randomUUID(), type: "text", content: { noContainer: true, html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4><ul class="space-y-3 text-sm opacity-70"><li><a href="/" class="hover:opacity-100 transition-opacity">Home</a></li><li><a href="/about" class="hover:opacity-100 transition-opacity">About Us</a></li><li><a href="/gallery" class="hover:opacity-100 transition-opacity">Gallery</a></li><li><a href="/our-services" class="hover:opacity-100 transition-opacity">Our Services</a></li><li><a href="/contact" class="hover:opacity-100 transition-opacity">Contact Us</a></li></ul></div>` } }],
+                            [{ id: crypto.randomUUID(), type: "text", content: { noContainer: true, html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Contact Us</h4><ul class="space-y-4 text-sm opacity-70"><li>Industrial Area, Jakarta Selatan, 12190</li><li>+62 21 555 1234</li><li>info@cgmscale.com</li></ul></div>` } }],
+                            [{ id: crypto.randomUUID(), type: "text", content: { noContainer: true, html: `<div class="space-y-6"><h4 class="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4><p class="text-sm opacity-70">Subscribe to get latest industry news and special offers.</p><div class="flex space-x-2"><input type="email" placeholder="Your email" class="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50" /><button class="px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20" style="background-color: var(--footer-button-bg); color: var(--footer-button-text);">Join</button></div></div>` } }]
                         ]
-                      }
-                    },
-                    {
-                      id: crypto.randomUUID(),
-                      type: "text",
-                      content: {
-                        noContainer: true,
-                        html: `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold"><p>© 2026 CGMSCALE. ALL RIGHTS RESERVED.</p><div class="flex space-x-6"><a href="/privacy" class="hover:opacity-100">Privacy Policy</a><a href="/terms" class="hover:opacity-100">Terms of Service</a></div></div>`
-                      }
                     }
-                  ])
-            : "";
-
-        const title =
-          urlSlug === "site-header"
-            ? "Site Header"
-            : urlSlug === "site-footer"
-              ? "Site Footer"
-              : urlSlug
-                ? urlSlug.charAt(0).toUpperCase() + urlSlug.slice(1).replace("-", " ")
-                : "";
-
-        setFormData({
-            title,
-            slug: urlSlug || "",
-            content: initialContent,
-            status: isHome || isSiteHeader || isSiteFooter ? "publish" : "draft"
-        });
-        setUseBuilder(true); // Default to builder for new pages
+                },
+                { id: crypto.randomUUID(), type: "text", content: { noContainer: true, html: `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold"><p>© 2026 CGMSCALE. ALL RIGHTS RESERVED.</p><div class="flex space-x-6"><a href="/privacy" class="hover:opacity-100">Privacy Policy</a><a href="/terms" class="hover:opacity-100">Terms of Service</a></div></div>` } }
+            ]) }));
+        }
+    } else {
+        // Reset if we're just on the list page
+        setFormData({ title: "", slug: "", content: "", status: "draft" });
+        setUseBuilder(false);
     }
   }, [action, editId, pages, urlSlug]);
 
@@ -533,6 +393,7 @@ export default function AdminPages() {
 
               {useBuilder ? (
                 <BuilderEditor 
+                    key={editId || "new-page"}
                     initialContent={formData.content || ""} 
                     onChange={(newContent) => setFormData({...formData, content: newContent})}
                 />

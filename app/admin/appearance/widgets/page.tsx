@@ -15,7 +15,9 @@ import {
   Code, 
   List,
   MousePointer2,
-  Loader2
+  Loader2,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Widget, WidgetArea } from "@/lib/types";
@@ -188,6 +190,12 @@ export default function AdminWidgets() {
   const [expandedWidgets, setExpandedWidgets] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   const LOCAL_WIDGET_AREAS_KEY = "local_widget_areas_v1";
 
@@ -323,7 +331,13 @@ export default function AdminWidgets() {
 
     // DB update
     if (!offlineMode) {
-      await supabase.from('widgets').delete().eq('id', widgetId);
+      const { error } = await supabase.from('widgets').delete().eq('id', widgetId);
+      if (error) {
+        showNotification('error', `Supabase Error: ${error.message}`);
+        setOfflineMode(true);
+      } else {
+        showNotification('success', 'Widget removed');
+      }
     }
   };
 
@@ -351,10 +365,15 @@ export default function AdminWidgets() {
     persistLocalAreas(nextAreas);
     toggleWidget(newWidget.id);
 
-    // DB Insert
+    // DB update
     if (!offlineMode) {
       const { error } = await supabase.from('widgets').insert(newWidget);
-      if (error) console.error('Error adding widget:', error);
+      if (error) {
+        showNotification('error', `Supabase Error: ${error.message}`);
+        setOfflineMode(true);
+      } else {
+        showNotification('success', 'Widget added');
+      }
     }
   };
 
@@ -362,9 +381,9 @@ export default function AdminWidgets() {
     // Optimistic update
     const nextAreas = widgetAreas.map(area => {
       if (area.id === areaId) {
-        return { 
-            ...area, 
-            widgets: area.widgets.map(w => w.id === widgetId ? { ...w, ...updated } : w) 
+        return {
+          ...area,
+          widgets: area.widgets.map(w => w.id === widgetId ? { ...w, ...updated } : w)
         };
       }
       return area;
@@ -372,10 +391,16 @@ export default function AdminWidgets() {
     setWidgetAreas(nextAreas);
     persistLocalAreas(nextAreas);
 
-    // Debounced DB update could go here, but for now we'll rely on the "Save" button for major edits
-    // or direct updates for small things if needed. 
-    // Actually, for better UX, let's just update local state and have a save button for the specific widget?
-    // The current UI shows a "Save" button inside the expanded widget. Let's make that trigger the DB update.
+    // DB update
+    if (!offlineMode) {
+      const { error } = await supabase.from('widgets').update(updated).eq('id', widgetId);
+      if (error) {
+        showNotification('error', `Supabase Error: ${error.message}`);
+        setOfflineMode(true);
+      } else {
+        showNotification('success', 'Widget settings saved');
+      }
+    }
   };
 
   const saveWidgetToDB = async (widget: Widget) => {
@@ -450,11 +475,27 @@ export default function AdminWidgets() {
 
   return (
     <div className="space-y-6">
-      {offlineMode && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 px-4 py-3 rounded text-sm">
-          Supabase is not reachable. Widgets are running in local mode (saved in this browser only).
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-xl border animate-in fade-in slide-in-from-top-4 duration-300 ${
+          notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span>
         </div>
       )}
+
+      <div className="flex items-center justify-between border-b pb-4 mb-4">
+        <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-black text-[#1d2327]">Widgets</h2>
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                offlineMode ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+            }`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${offlineMode ? 'bg-red-600' : 'bg-green-600 animate-pulse'}`}></div>
+                {offlineMode ? 'Offline (Local Only)' : 'Connected'}
+            </div>
+        </div>
+      </div>
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Column: Available Widgets */}
         <div className="w-full md:w-1/3 space-y-4">

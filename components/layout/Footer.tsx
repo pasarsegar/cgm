@@ -122,7 +122,7 @@ export default function Footer() {
 
   const hasFooterWidgets = footerWidgetAreas.some((a) => (a.widgets || []).length > 0);
 
-  // If we have widgets, prioritize them
+  // 1. If we have widgets in Supabase, show them
   if (hasFooterWidgets) {
     return (
       <footer className="pt-16 pb-8" style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
@@ -199,18 +199,19 @@ export default function Footer() {
     );
   }
 
-  // If no widgets AND no builder content, show nothing
-  if (!footerContent) {
-    return null;
+  // 2. If NO widgets, but there is "Site Footer" page content, show that
+  if (footerContent && footerContent.trim().length > 0) {
+    return (
+      <footer style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
+        {footerContent.trim().startsWith("[") ? (
+          <BuilderRendererLite content={footerContent} />
+        ) : (
+          <>{parse(footerContent)}</>
+        )}
+      </footer>
+    );
   }
 
-  return (
-    <footer style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
-      {footerContent.trim().startsWith("[") ? (
-        <BuilderRendererLite content={footerContent} />
-      ) : (
-        <>{parse(footerContent)}</>
-      )}
-    </footer>
-  );
+  // 3. If everything is empty, show absolutely nothing
+  return null;
 }

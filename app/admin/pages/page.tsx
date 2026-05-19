@@ -568,7 +568,9 @@ function AdminPagesContent() {
                           </td>
                           <td className="p-5 hidden lg:table-cell">
                             <div className="flex flex-col">
-                                <span className="text-xs font-bold text-gray-700">{new Date(page.updated_at || page.created_at).toLocaleDateString()}</span>
+                                <span className="text-xs font-bold text-gray-700">
+                                    {(page.updated_at || page.created_at) ? new Date(page.updated_at || page.created_at || "").toLocaleDateString() : 'Never'}
+                                </span>
                                 <span className="text-[10px] text-gray-400 font-medium">Last Modified</span>
                             </div>
                           </td>

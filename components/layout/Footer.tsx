@@ -199,102 +199,18 @@ export default function Footer() {
     );
   }
 
-  // If no widgets, check for builder content
-  if (footerContent) {
-    return (
-      <footer style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
-        {footerContent.trim().startsWith("[") ? (
-          <BuilderRendererLite content={footerContent} />
-        ) : (
-          <>{parse(footerContent)}</>
-        )}
-      </footer>
-    );
+  // If no widgets AND no builder content, show nothing
+  if (!footerContent) {
+    return null;
   }
 
   return (
-    <footer className="pt-16 pb-8" style={{ backgroundColor: 'var(--footer-bg)', color: 'var(--footer-text)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Column 1: Brand Info */}
-          <div className="space-y-6">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-black italic" style={{ color: 'var(--footer-text)' }}>
-                {siteName.split(" ")[0]}
-                <span className="text-primary">{siteName.split(" ").slice(1).join("")}</span>
-              </span>
-            </Link>
-            <p className="text-sm leading-relaxed opacity-70">
-              Your premier partner for high-precision industrial scaling solutions and measurement systems. Based in Jakarta, serving industries worldwide.
-            </p>
-            <div className="flex items-center space-x-4">
-              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Instagram className="w-4 h-4" /></Link>
-              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Facebook className="w-4 h-4" /></Link>
-              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Twitter className="w-4 h-4" /></Link>
-              <Link href="#" className="p-2 bg-white/5 hover:bg-primary rounded-full transition-all text-current"><Youtube className="w-4 h-4" /></Link>
-            </div>
-          </div>
-
-          {/* Column 2: Quick Links */}
-          <div className="space-y-6">
-            <h4 className="text-sm font-black uppercase tracking-widest text-primary">Quick Links</h4>
-            <ul className="space-y-3 text-sm opacity-70">
-              <li><Link href="/" className="hover:opacity-100 transition-opacity">Home</Link></li>
-              <li><Link href="/about" className="hover:opacity-100 transition-opacity">About Us</Link></li>
-              <li><Link href="/gallery" className="hover:opacity-100 transition-opacity">Gallery</Link></li>
-              <li><Link href="/our-services" className="hover:opacity-100 transition-opacity">Our Services</Link></li>
-              <li><Link href="/contact" className="hover:opacity-100 transition-opacity">Contact Us</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 3: Contact Info */}
-          <div className="space-y-6">
-            <h4 className="text-sm font-black uppercase tracking-widest text-primary">Contact Us</h4>
-            <ul className="space-y-4 text-sm opacity-70">
-              <li className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-                <span>Industrial Area, Jakarta Selatan, 12190</span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                <span>+62 21 555 1234</span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-                <span>info@cgmscale.com</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Newsletter */}
-          <div className="space-y-6">
-            <h4 className="text-sm font-black uppercase tracking-widest text-primary">Newsletter</h4>
-            <p className="text-sm opacity-70">Subscribe to get latest industry news and special offers.</p>
-            <form className="flex space-x-2">
-              <input 
-                type="email" 
-                placeholder="Your email" 
-                className="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50"
-              />
-              <button 
-                className="px-4 py-2 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                style={{ backgroundColor: 'var(--footer-button-bg)', color: 'var(--footer-button-text)' }}
-              >
-                Join
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-current/10 flex flex-col md:flex-row items-center justify-between text-xs opacity-50 space-y-4 md:space-y-0 uppercase tracking-widest font-bold">
-          <p>&copy; {themeSettings.footerYear || new Date().getFullYear()} {themeSettings.footerCopyrightText || `${siteName}. ALL RIGHTS RESERVED.`}</p>
-          <div className="flex space-x-6">
-            {themeSettings.showFooterPrivacy === true && <Link href="/privacy" className="hover:opacity-100">Privacy Policy</Link>}
-            {themeSettings.showFooterTerms === true && <Link href="/terms" className="hover:opacity-100">Terms of Service</Link>}
-          </div>
-        </div>
-      </div>
+    <footer style={{ backgroundColor: "var(--footer-bg)", color: "var(--footer-text)" }}>
+      {footerContent.trim().startsWith("[") ? (
+        <BuilderRendererLite content={footerContent} />
+      ) : (
+        <>{parse(footerContent)}</>
+      )}
     </footer>
   );
 }

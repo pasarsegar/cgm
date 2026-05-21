@@ -186,6 +186,7 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
         fontSize: block.content.fontSize || 'inherit',
         fontFamily: block.content.fontFamily || 'inherit',
         whiteSpace: 'pre-wrap' as const,
+        lineHeight: '1.6',
       };
 
       if (block.content.noContainer) {
@@ -193,7 +194,7 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
       }
       return (
         <div className="container mx-auto px-4 py-8">
-          <div className="prose max-w-none" style={textStyle}>
+          <div style={textStyle}>
             {parse(block.content.html || '')}
           </div>
         </div>

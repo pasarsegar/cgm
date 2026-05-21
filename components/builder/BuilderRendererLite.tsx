@@ -91,11 +91,12 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
         fontSize: block.content.fontSize || "inherit",
         fontFamily: block.content.fontFamily || "inherit",
         whiteSpace: "pre-wrap" as const,
+        lineHeight: "1.6",
       };
       if (block.content.noContainer) return <div style={textStyle}>{parse(block.content.html || "")}</div>;
       return (
         <div className="container mx-auto px-4 py-8">
-          <div className="prose max-w-none" style={textStyle}>
+          <div style={textStyle}>
             {parse(block.content.html || "")}
           </div>
         </div>

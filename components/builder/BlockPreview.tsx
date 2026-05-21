@@ -132,12 +132,13 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
     case 'text':
       return (
         <div 
-            className="prose max-w-none p-4 border border-dashed border-gray-200 rounded min-h-[100px]"
+            className="p-4 border border-dashed border-gray-200 rounded min-h-[100px]"
             style={{ 
                 color: block.content.color || 'inherit',
                 fontSize: block.content.fontSize || 'inherit',
                 fontFamily: block.content.fontFamily || 'inherit',
-                whiteSpace: 'pre-wrap' as const
+                whiteSpace: 'pre-wrap' as const,
+                lineHeight: '1.6'
             }}
         >
             {block.content.html ? parse(block.content.html) : <p className="text-gray-400 italic">Start typing text...</p>}

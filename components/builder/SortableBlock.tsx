@@ -74,11 +74,16 @@ export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }
         return (
           <div className="space-y-4">
             <textarea 
-              className="w-full p-2 border rounded h-48 font-mono text-sm"
+              className="w-full p-4 border rounded h-64 font-mono text-base leading-relaxed"
               value={block.content.html}
               onChange={(e) => onUpdate(block.id, { ...block.content, html: e.target.value })}
               placeholder="Enter text or HTML content..."
               spellCheck={false}
+              style={{ 
+                color: block.content.color || '#333333',
+                fontSize: block.content.fontSize || '16px',
+                fontFamily: block.content.fontFamily === 'inherit' ? 'monospace' : block.content.fontFamily
+              }}
             />
             
             <div className="grid grid-cols-2 gap-4 bg-white p-4 border rounded shadow-sm">

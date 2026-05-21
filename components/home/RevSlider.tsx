@@ -27,7 +27,7 @@ export default function RevSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full aspect-[4/3] sm:aspect-video md:h-[600px] lg:h-[700px] overflow-hidden group bg-[#1d2327]">
+    <div className="relative w-full aspect-[2/1] sm:aspect-video md:h-[600px] lg:h-[700px] overflow-hidden group bg-[#1d2327]">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div 
@@ -42,9 +42,9 @@ export default function RevSlider() {
             <img 
                 src={slide.image} 
                 alt={slide.title} 
-                className="w-full h-full object-cover object-center" 
+                className="w-full h-full object-contain md:object-cover object-center" 
             />
-            <div className="absolute inset-0 bg-black/40 md:bg-black/30" />
+            <div className="absolute inset-0 bg-black/20 md:bg-black/30" />
           </div>
 
           {/* Content */}
@@ -54,7 +54,7 @@ export default function RevSlider() {
             slide.buttonPosition === 'center' ? 'md:items-center md:text-center' :
             slide.buttonPosition === 'right' ? 'md:items-end md:text-right' :
             'md:items-start md:text-left',
-            // Mobile: keep it centered and safe from edges
+            // Mobile: center the buttons but keep them small
             "items-center text-center md:items-start md:text-left"
           )}>
             <div className={cn(
@@ -66,15 +66,18 @@ export default function RevSlider() {
               slide.buttonPosition === 'right' ? 'md:items-end' :
               ''
             )}>
-              <span className="text-primary font-black text-[8px] md:text-xs uppercase tracking-[0.3em] block">
+              {/* Hide text on mobile if it's likely already in the image */}
+              <span className="hidden md:block text-primary font-black text-[8px] md:text-xs uppercase tracking-[0.3em]">
                 {slide.subtitle}
               </span>
-              <h2 className="text-xl sm:text-4xl md:text-6xl font-black italic uppercase leading-[1.1] break-words line-clamp-2">
+              <h2 className="hidden md:block text-xl sm:text-4xl md:text-6xl font-black italic uppercase leading-[1.1] break-words line-clamp-2">
                 {slide.title}
               </h2>
-              <p className="text-gray-200 text-[10px] sm:text-sm md:text-lg max-w-xl leading-relaxed line-clamp-2 md:line-clamp-none hidden sm:block">
+              <p className="hidden md:block text-gray-200 text-[10px] sm:text-sm md:text-lg max-w-xl leading-relaxed line-clamp-2 md:line-clamp-none">
                 {slide.description}
               </p>
+              
+              {/* Buttons: keep them visible but compact on mobile */}
               <div className="pt-2 md:pt-4 flex flex-row items-center gap-3 md:gap-6">
                 <a 
                   href={slide.buttonLink}

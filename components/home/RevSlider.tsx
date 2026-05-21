@@ -91,21 +91,25 @@ export default function RevSlider() {
                 {slide.description}
               </p>
               
-              {/* Buttons: keep them visible but compact on mobile */}
-              <div className="pt-2 md:pt-4 flex flex-row items-center gap-3 md:gap-6">
-                <a 
-                  href={slide.buttonLink}
-                  className="inline-flex bg-primary text-white px-4 py-2 md:px-8 md:py-4 text-[9px] md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 items-center justify-center group/btn whitespace-nowrap"
-                >
-                  {slide.buttonText}
-                  <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                </a>
-                {slide.secondButtonText && (
-                  <a href={slide.secondButtonLink || '#'} className="text-white text-[9px] md:text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1 whitespace-nowrap">
-                    {slide.secondButtonText}
-                  </a>
-                )}
-              </div>
+              {/* Buttons: hidden if text is empty */}
+              {(slide.buttonText || slide.secondButtonText) && (
+                <div className="pt-2 md:pt-4 flex flex-row items-center gap-3 md:gap-6">
+                  {slide.buttonText && (
+                    <a 
+                      href={slide.buttonLink}
+                      className="inline-flex bg-primary text-white px-4 py-2 md:px-8 md:py-4 text-[9px] md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-primary/30 items-center justify-center group/btn whitespace-nowrap"
+                    >
+                      {slide.buttonText}
+                      <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                    </a>
+                  )}
+                  {slide.secondButtonText && (
+                    <a href={slide.secondButtonLink || '#'} className="text-white text-[9px] md:text-sm font-black uppercase tracking-widest hover:text-primary transition-colors border-b-2 border-white/20 hover:border-primary pb-1 whitespace-nowrap">
+                      {slide.secondButtonText}
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

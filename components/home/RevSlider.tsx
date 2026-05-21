@@ -27,7 +27,20 @@ export default function RevSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full aspect-[2/1] sm:aspect-video md:h-[600px] lg:h-[700px] overflow-hidden group bg-[#1d2327]">
+    <div className="relative w-full h-auto md:h-[600px] lg:h-[700px] overflow-hidden group bg-black">
+      {/* 
+        This invisible image forces the container to maintain the exact aspect ratio 
+        of your uploaded banner on mobile, making it "fit automatically".
+      */}
+      {slides[0] && (
+        <img 
+          src={slides[0].image} 
+          alt="spacer" 
+          className="w-full h-auto opacity-0 invisible md:hidden pointer-events-none" 
+          aria-hidden="true"
+        />
+      )}
+
       {/* Slides */}
       {slides.map((slide, index) => (
         <div 
@@ -42,9 +55,10 @@ export default function RevSlider() {
             <img 
                 src={slide.image} 
                 alt={slide.title} 
-                className="w-full h-full object-contain md:object-cover object-center" 
+                className="w-full h-full object-cover" 
             />
-            <div className="absolute inset-0 bg-black/20 md:bg-black/30" />
+            {/* Reduced overlay to let image text shine through */}
+            <div className="absolute inset-0 bg-black/10 md:bg-black/30" />
           </div>
 
           {/* Content */}

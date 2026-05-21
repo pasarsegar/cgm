@@ -234,7 +234,7 @@ export default function Footer() {
                         <input
                           name="q"
                           placeholder="Search..."
-                          className="flex-1 bg-current/5 border-none px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-current placeholder:text-current/50"
+                          className="flex-1 bg-white border border-gray-200 px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none text-black placeholder:text-gray-400"
                         />
                         <button
                           type="submit"

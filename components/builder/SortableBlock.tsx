@@ -74,10 +74,11 @@ export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }
         return (
           <div className="space-y-4">
             <textarea 
-              className="w-full p-2 border rounded h-32"
+              className="w-full p-2 border rounded h-48 font-mono text-sm"
               value={block.content.html}
               onChange={(e) => onUpdate(block.id, { ...block.content, html: e.target.value })}
-              placeholder="Enter HTML content..."
+              placeholder="Enter text or HTML content..."
+              spellCheck={false}
             />
             
             <div className="grid grid-cols-2 gap-4 bg-white p-4 border rounded shadow-sm">
@@ -588,6 +589,7 @@ export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }
                                         value={child.content.html}
                                         onChange={(e) => updateChildBlock(child.id, { ...child.content, html: e.target.value })}
                                         placeholder="HTML Content..."
+                                        spellCheck={false}
                                     />
                                 )}
                                 {child.type === 'image' && (
@@ -817,6 +819,7 @@ export default function SortableBlock({ block, onDelete, onUpdate, onDuplicate }
                                                     className="w-full text-xs border rounded p-1 h-16"
                                                     value={subBlock.content.html}
                                                     onChange={(e) => updateBlockInColumn(colIndex, subBlock.id, { ...subBlock.content, html: e.target.value })}
+                                                    spellCheck={false}
                                                 />
                                             )}
                                             {subBlock.type === 'image' && (

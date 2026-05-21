@@ -185,6 +185,7 @@ function renderBlock(block: BuilderBlock & { data?: any }) {
         color: block.content.color || 'inherit',
         fontSize: block.content.fontSize || 'inherit',
         fontFamily: block.content.fontFamily || 'inherit',
+        whiteSpace: 'pre-wrap' as const,
       };
 
       if (block.content.noContainer) {

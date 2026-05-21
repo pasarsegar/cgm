@@ -90,6 +90,7 @@ function renderBlock(block: BuilderBlock): React.ReactNode {
         color: block.content.color || "inherit",
         fontSize: block.content.fontSize || "inherit",
         fontFamily: block.content.fontFamily || "inherit",
+        whiteSpace: "pre-wrap" as const,
       };
       if (block.content.noContainer) return <div style={textStyle}>{parse(block.content.html || "")}</div>;
       return (

@@ -136,7 +136,8 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
             style={{ 
                 color: block.content.color || 'inherit',
                 fontSize: block.content.fontSize || 'inherit',
-                fontFamily: block.content.fontFamily || 'inherit'
+                fontFamily: block.content.fontFamily || 'inherit',
+                whiteSpace: 'pre-wrap' as const
             }}
         >
             {block.content.html ? parse(block.content.html) : <p className="text-gray-400 italic">Start typing text...</p>}
